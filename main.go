@@ -1,275 +1,168 @@
+// Command cms serves ACME Inc.'s posts: a read-only JSON API and two HTML pages, standard library only.
+//
+// Standalone (default) it reads mock/posts.json and mock/employees.json. With -hub (or ACME_HUB) post
+// authors come live from the CRUD hub's employees table; if the hub is unreachable it says so and
+// falls back to the snapshot. The earlier SQLite design is kept in reference/ for later.
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
-	"errors"
-	"fmt"
+	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	"acme/cms/internal/health"
+	"acme/cms/internal/store"
+	"acme/cms/internal/textfmt"
 )
 
-// --- Models ---
-type Post struct {
-	ID          int             `json:"id"`
-	Title       string          `json:"title"`
-	Slug        string          `json:"slug"`
-	Body        json.RawMessage `json:"body"` // JSON block content from editors like TipTap/Editor.js
-	Status      string          `json:"status"` // "draft" or "published"
-	AuthorID    int             `json:"author_id"`
-	PublishedAt *time.Time      `json:"published_at,omitempty"`
-	CreatedAt   time.Time       `json:"created_at"`
-	UpdatedAt   time.Time       `json:"updated_at"`
-}
-
-type Application struct {
-	db *sql.DB
-}
-
 func main() {
-	// Initialize SQLite Database
-	db, err := sql.Open("sqlite3", "./cms.db")
+	addr := flag.String("addr", envOr("CMS_ADDR", "127.0.0.1:8720"), "listen address")
+	mock := flag.String("mock", "mock", "snapshot folder (posts.json, employees.json)")
+	hub := flag.String("hub", os.Getenv("ACME_HUB"), "CRUD hub base URL for live authors (empty: snapshot only)")
+	flag.Parse()
+
+	s, err := load(*mock, strings.TrimRight(*hub, "/"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	log.Printf("ACME Inc. CMS on http://%s/ (authors from %s, %v)", *addr, s.Source, s.Counts())
+	log.Fatal(http.ListenAndServe(*addr, routes(s, time.Now())))
+}
 
-	if err := initSchema(db); err != nil {
-		log.Fatal("Failed to initialize schema:", err)
+func envOr(key, def string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
 	}
+	return def
+}
 
-	app := &Application{db: db}
+func load(mock, hub string) (*store.Store, error) {
+	if hub != "" {
+		s, err := store.FromHub(mock, hub)
+		if err == nil {
+			return s, nil
+		}
+		log.Printf("hub unreachable at %s (%v); using the mock snapshot", hub, err)
+	}
+	return store.FromMock(mock)
+}
 
-	// Router setup using Standard Library net/http (Go 1.22+)
+func routes(s *store.Store, start time.Time) *http.ServeMux {
 	mux := http.NewServeMux()
-
-	// Public API Endpoints
-	mux.HandleFunc("GET /api/posts", app.listPublishedPosts)
-	mux.HandleFunc("GET /api/posts/{slug}", app.getPostBySlug)
-
-	// Admin/Protected Endpoints (Wrap with Auth Middleware)
-	mux.HandleFunc("POST /api/admin/posts", app.requireAuth(app.createPost))
-	mux.HandleFunc("PUT /api/admin/posts/{id}", app.requireAuth(app.updatePost))
-	mux.HandleFunc("DELETE /api/admin/posts/{id}", app.requireAuth(app.deletePost))
-
-	// Static Admin Dashboard UI (Embedded or Served directly)
-	mux.Handle("/", http.FileServer(http.Dir("./public")))
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	log.Printf("CMS Server running on http://localhost:%s", port)
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
-		log.Fatal(err)
-	}
-}
-
-// --- Database Schema ---
-func initSchema(db *sql.DB) error {
-	schema := `
-	CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		email TEXT UNIQUE NOT NULL,
-		password_hash TEXT NOT NULL,
-		role TEXT NOT NULL DEFAULT 'author'
-	);
-
-	CREATE TABLE IF NOT EXISTS posts (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		title TEXT NOT NULL,
-		slug TEXT UNIQUE NOT NULL,
-		body TEXT NOT NULL,
-		status TEXT NOT NULL DEFAULT 'draft',
-		author_id INTEGER NOT NULL,
-		published_at DATETIME,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY(author_id) REFERENCES users(id)
-	);
-
-	CREATE TABLE IF NOT EXISTS post_revisions (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		post_id INTEGER NOT NULL,
-		body TEXT NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE
-	);
-
-	-- Built-in SQLite Full-Text Search Table
-	CREATE VIRTUAL TABLE IF NOT EXISTS posts_fts USING fts5(title, body, content='posts', content_rowid='id');
-	`
-	_, err := db.Exec(schema)
-	return err
-}
-
-// --- Handlers ---
-func (app *Application) listPublishedPosts(w http.ResponseWriter, r *http.Request) {
-	rows, err := app.db.Query("SELECT id, title, slug, body, status, author_id, published_at, created_at, updated_at FROM posts WHERE status = 'published' ORDER BY published_at DESC")
-	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
-	posts := []Post{}
-	for rows.Next() {
-		var p Post
-		if err := rows.Scan(&p.ID, &p.Title, &p.Slug, &p.Body, &p.Status, &p.AuthorID, &p.PublishedAt, &p.CreatedAt, &p.UpdatedAt); err != nil {
-			http.Error(w, "Error scanning data", http.StatusInternalServerError)
+	mux.HandleFunc("GET /api/posts", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, s.Published())
+	})
+	mux.HandleFunc("GET /api/posts/{slug}", func(w http.ResponseWriter, r *http.Request) {
+		p, hint, ok := s.Get(r.PathValue("slug"))
+		if !ok {
+			notFound(w, hint)
 			return
 		}
-		posts = append(posts, p)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "public, max-age=60, s-maxage=3600")
-	json.NewEncoder(w).Encode(posts)
-}
-
-func (app *Application) getPostBySlug(w http.ResponseWriter, r *http.Request) {
-	slug := r.PathValue("slug")
-
-	var p Post
-	err := app.db.QueryRow("SELECT id, title, slug, body, status, author_id, published_at, created_at, updated_at FROM posts WHERE slug = ? AND status = 'published'", slug).
-		Scan(&p.ID, &p.Title, &p.Slug, &p.Body, &p.Status, &p.AuthorID, &p.PublishedAt, &p.CreatedAt, &p.UpdatedAt)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		http.Error(w, "Post not found", http.StatusNotFound)
-		return
-	} else if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "public, max-age=300")
-	json.NewEncoder(w).Encode(p)
-}
-
-func (app *Application) createPost(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Title  string          `json:"title"`
-		Slug   string          `json:"slug"`
-		Body   json.RawMessage `json:"body"`
-		Status string          `json:"status"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid JSON body", http.StatusBadRequest)
-		return
-	}
-
-	var publishedAt *time.Time
-	if input.Status == "published" {
-		now := time.Now()
-		publishedAt = &now
-	}
-
-	// Simple hardcoded author_id for demo (typically extracted from session context)
-	authorID := 1
-
-	tx, err := app.db.Begin()
-	if err != nil {
-		http.Error(w, "Transaction error", http.StatusInternalServerError)
-		return
-	}
-	defer tx.Rollback()
-
-	res, err := tx.Exec(
-		"INSERT INTO posts (title, slug, body, status, author_id, published_at) VALUES (?, ?, ?, ?, ?, ?)",
-		input.Title, input.Slug, string(input.Body), input.Status, authorID, publishedAt,
-	)
-	if err != nil {
-		http.Error(w, "Could not insert post", http.StatusInternalServerError)
-		return
-	}
-
-	postID, _ := res.LastInsertId()
-
-	// Create initial revision record
-	_, _ = tx.Exec("INSERT INTO post_revisions (post_id, body) VALUES (?, ?)", postID, string(input.Body))
-
-	// Keep FTS Index synced
-	_, _ = tx.Exec("INSERT INTO posts_fts(rowid, title, body) VALUES (?, ?, ?)", postID, input.Title, string(input.Body))
-
-	if err := tx.Commit(); err != nil {
-		http.Error(w, "Commit error", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, `{"id": %d, "message": "Post created successfully"}`, postID)
-}
-
-func (app *Application) updatePost(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-
-	var input struct {
-		Title  string          `json:"title"`
-		Slug   string          `json:"slug"`
-		Body   json.RawMessage `json:"body"`
-		Status string          `json:"status"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
-		return
-	}
-
-	tx, err := app.db.Begin()
-	if err != nil {
-		http.Error(w, "Transaction error", http.StatusInternalServerError)
-		return
-	}
-	defer tx.Rollback()
-
-	_, err = tx.Exec(
-		"UPDATE posts SET title = ?, slug = ?, body = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-		input.Title, input.Slug, string(input.Body), input.Status, id,
-	)
-	if err != nil {
-		http.Error(w, "Failed to update post", http.StatusInternalServerError)
-		return
-	}
-
-	// Add new revision snapshot
-	_, _ = tx.Exec("INSERT INTO post_revisions (post_id, body) VALUES (?, ?)", id, string(input.Body))
-
-	if err := tx.Commit(); err != nil {
-		http.Error(w, "Commit error", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message": "Post updated"}`))
-}
-
-func (app *Application) deletePost(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	_, err := app.db.Exec("DELETE FROM posts WHERE id = ?", id)
-	if err != nil {
-		http.Error(w, "Failed to delete post", http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusNoContent)
-}
-
-// --- Middleware ---
-func (app *Application) requireAuth(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Replace this with actual Cookie session or Bearer JWT check
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeJSON(w, http.StatusOK, map[string]any{"post": p, "author": s.Author(p)})
+	})
+	mux.HandleFunc("GET /api/posts/{slug}/related", func(w http.ResponseWriter, r *http.Request) {
+		if _, hint, ok := s.Get(r.PathValue("slug")); !ok {
+			notFound(w, hint)
 			return
 		}
-		next.ServeHTTP(w, r)
+		writeJSON(w, http.StatusOK, s.Related(r.PathValue("slug"), 3))
+	})
+	mux.HandleFunc("GET /api/search", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, s.Search(r.URL.Query().Get("q")))
+	})
+	mux.HandleFunc("GET /api/source", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, map[string]any{"authors_from": s.Source, "counts": s.Counts()})
+	})
+	mux.Handle("/api/health", health.Handler(start))
+
+	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query().Get("q")
+		posts := s.Published()
+		if q != "" {
+			posts = s.Search(q)
+		}
+		render(w, http.StatusOK, indexPage, map[string]any{"Posts": posts, "Q": q, "Source": s.Source,
+			"Count": textfmt.Plural(len(posts), "1 post", itoa(len(posts))+" posts")})
+	})
+	mux.HandleFunc("GET /posts/{slug}", func(w http.ResponseWriter, r *http.Request) {
+		p, hint, ok := s.Get(r.PathValue("slug"))
+		if !ok {
+			render(w, http.StatusNotFound, missingPage, map[string]any{"Hint": hint, "Source": s.Source})
+			return
+		}
+		var body struct {
+			Blocks []struct {
+				Text string `json:"text"`
+			} `json:"blocks"`
+		}
+		_ = json.Unmarshal(p.Body, &body)
+		render(w, http.StatusOK, postPage, map[string]any{"Post": p, "Author": s.Author(p), "Blocks": body.Blocks,
+			"Related": s.Related(p.Slug, 3), "Source": s.Source})
+	})
+	return mux
+}
+
+func itoa(n int) string {
+	b, _ := json.Marshal(n)
+	return string(b)
+}
+
+func writeJSON(w http.ResponseWriter, code int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(v)
+}
+
+func notFound(w http.ResponseWriter, hint string) {
+	body := map[string]string{"error": "not found"}
+	if hint != "" {
+		body["did_you_mean"] = hint
+	}
+	writeJSON(w, http.StatusNotFound, body)
+}
+
+func render(w http.ResponseWriter, code int, t *template.Template, data any) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(code)
+	if err := t.Execute(w, data); err != nil {
+		log.Print(err)
 	}
 }
+
+const layout = `{{define "top"}}<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>ACME Inc. Journal</title>
+<style>
+body{margin:0;font:16px/1.55 system-ui,sans-serif;color:#1d2330;background:#f6f7f9}
+@media (prefers-color-scheme:dark){body{color:#e6e8ec;background:#14171c}a{color:#8fb0ff}.card{background:#1d2128!important;border-color:#2e343e!important}}
+header,main,footer{max-width:760px;margin:0 auto;padding:16px}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap}header h1{font-size:20px;margin:0;flex:1}
+a{color:#2f5bd3;text-decoration:none}a:hover{text-decoration:underline}
+.card{background:#fff;border:1px solid #dde1e7;border-radius:8px;padding:14px 16px;margin-bottom:12px}
+.meta{color:#667085;font-size:13px}h2{font-size:18px;margin:0 0 4px}
+input{font:inherit;padding:4px 8px;border:1px solid #c3c8d0;border-radius:6px}
+footer{color:#667085;font-size:12px}
+</style></head><body><header><h1><a href="/">ACME Inc. Journal</a></h1>
+<form action="/"><input name="q" type="search" value="{{.Q}}" placeholder="Search posts"></form></header><main>{{end}}
+{{define "bottom"}}</main><footer>Fictional company; text is lorem ipsum. Authors from {{.Source}}. JSON at <a href="/api/posts">/api/posts</a>.</footer></body></html>{{end}}`
+
+var (
+	indexPage = template.Must(template.Must(template.New("index").Parse(layout)).Parse(`{{template "top" .}}
+<p class="meta">{{.Count}}{{if .Q}} matching "{{.Q}}"{{end}}</p>
+{{range .Posts}}<article class="card"><h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
+<div class="meta">{{.Author}} · {{.PublishedAt}}</div><p>{{.Excerpt}}</p></article>{{end}}
+{{template "bottom" .}}`))
+	postPage = template.Must(template.Must(template.New("post").Parse(layout)).Parse(`{{template "top" .}}
+<article class="card"><h2>{{.Post.Title}}</h2><div class="meta">{{.Author}} · {{.Post.PublishedAt}}</div>
+{{range .Blocks}}<p>{{.Text}}</p>{{end}}</article>
+{{if .Related}}<h3>Related</h3>{{range .Related}}<div class="card"><a href="/posts/{{.Slug}}">{{.Title}}</a> <span class="meta">{{.Author}}</span></div>{{end}}{{end}}
+{{template "bottom" .}}`))
+	missingPage = template.Must(template.Must(template.New("missing").Parse(layout)).Parse(`{{template "top" .}}
+<div class="card"><h2>Post not found</h2>{{if .Hint}}<p>Did you mean <a href="/posts/{{.Hint}}">{{.Hint}}</a>?</p>{{end}}</div>
+{{template "bottom" .}}`))
+)
