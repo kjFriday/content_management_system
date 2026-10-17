@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -14,11 +16,9 @@ import (
 
 func server(t *testing.T) (*httptest.Server, *store.Store) {
 	t.Helper()
-	s, err := store.FromMock("mock")
-	if err != nil {
-		t.Skip("no mock snapshot:", err)
-	}
-	srv := httptest.NewServer(routes(s, time.Now()))
+	st := newSite(filepath.Join(t.TempDir(), "none.db"), false)
+	s := st.get()
+	srv := httptest.NewServer(routes(st, time.Now()))
 	t.Cleanup(srv.Close)
 	return srv, s
 }
@@ -77,12 +77,30 @@ func TestPages(t *testing.T) {
 	}
 }
 
-func TestLoadFallsBackWhenHubIsDown(t *testing.T) {
-	s, err := load("mock", "http://127.0.0.1:1")
-	if err != nil {
-		t.Skip("no mock snapshot:", err)
+func TestNoDatabaseMeansSnapshot(t *testing.T) {
+	missing := filepath.Join(t.TempDir(), "none.db")
+	st := newSite(missing, false)
+	if st.get().Source != "mock" || !strings.Contains(st.sourceText(), "mock snapshot") {
+		t.Fatalf("source %q / %q", st.get().Source, st.sourceText())
 	}
-	if s.Source != "mock" {
-		t.Fatalf("source = %q", s.Source)
+	if _, err := os.Stat(missing); !os.IsNotExist(err) {
+		t.Fatal("a missing database was created")
+	}
+	if err := st.useDB(missing); err == nil {
+		t.Fatal("switched to a missing database")
+	}
+}
+
+func TestIconsAndAboutPage(t *testing.T) {
+	srv, _ := server(t)
+	for path, kind := range map[string]string{"/favicon.ico": "image/x-icon", "/icon-32.png": "image/png", "/icon-256.png": "image/png"} {
+		resp, err := http.Get(srv.URL + path)
+		if err != nil || resp.StatusCode != 200 || resp.Header.Get("Content-Type") != kind {
+			t.Fatalf("%s: %v %v", path, err, resp)
+		}
+		resp.Body.Close()
+	}
+	if code, body := get(t, srv.URL+"/about"); code != 200 || !strings.Contains(body, "CC BY 2.5") || !strings.Contains(body, "0.2.0") {
+		t.Fatalf("about: %d", code)
 	}
 }

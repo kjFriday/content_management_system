@@ -1,63 +1,118 @@
-// Command cms serves ACME Inc.'s posts: a read-only JSON API and two HTML pages, standard library only.
+// Command acme-cms is ACME Journal, ACME Inc.'s posts: a desktop window over a small set of pages
+// and a read-only JSON API, served in-process to that window only.
 //
-// Standalone (default) it reads mock/posts.json and mock/employees.json. With -hub (or ACME_HUB) post
-// authors come live from the CRUD hub's employees table; if the hub is unreachable it says so and
-// falls back to the snapshot. The earlier SQLite design is kept in reference/ for later.
+// Posts come from the embedded snapshot (the CMS owns them); post authors come from the shared ACME
+// database's employees table, opened read-only by path, or from the snapshot when there is no database.
+// See cli.go for the flags (-install, -uninstall, -serve, ...).
 package main
 
 import (
+	"embed"
 	"encoding/json"
-	"flag"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
-	"os"
-	"strings"
+	"path/filepath"
+	"sync"
 	"time"
 
+	"acme/cms/internal/app"
+	"acme/cms/internal/db"
 	"acme/cms/internal/health"
 	"acme/cms/internal/store"
 	"acme/cms/internal/textfmt"
 )
 
-func main() {
-	addr := flag.String("addr", envOr("CMS_ADDR", "127.0.0.1:8720"), "listen address")
-	mock := flag.String("mock", "mock", "snapshot folder (posts.json, employees.json)")
-	hub := flag.String("hub", os.Getenv("ACME_HUB"), "CRUD hub base URL for live authors (empty: snapshot only)")
-	flag.Parse()
+//go:embed mock/posts.json mock/employees.json
+var snapshot embed.FS
 
-	s, err := load(*mock, strings.TrimRight(*hub, "/"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("ACME Inc. CMS on http://%s/ (authors from %s, %v)", *addr, s.Source, s.Counts())
-	log.Fatal(http.ListenAndServe(*addr, routes(s, time.Now())))
+//go:embed icon/app.ico icon/app-32.png icon/app-256.png
+var icons embed.FS
+
+func mockFS() fs.FS { sub, _ := fs.Sub(snapshot, "mock"); return sub }
+
+// site is the current store and where its authors came from; the Database page can swap it.
+type site struct {
+	mu       sync.RWMutex
+	s        *store.Store
+	dbPath   string
+	forced   bool   // -mock: never use the database
+	why      string // when on the snapshot: why the database was not used
+	settings func(path string) error
 }
 
-func envOr(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return def
-}
-
-func load(mock, hub string) (*store.Store, error) {
-	if hub != "" {
-		s, err := store.FromHub(mock, hub)
+// load reads authors from the database at path, or falls back to the snapshot (and says why).
+func load(path string, forceMock bool) (*store.Store, string) {
+	why := "-mock"
+	if !forceMock {
+		authors, err := db.LoadAuthors(path)
 		if err == nil {
-			return s, nil
+			if s, err := store.FromAuthors(mockFS(), authors, "database"); err == nil {
+				return s, ""
+			}
 		}
-		log.Printf("hub unreachable at %s (%v); using the mock snapshot", hub, err)
+		why = err.Error()
 	}
-	return store.FromMock(mock)
+	s, err := store.FromMock(mockFS())
+	if err != nil { // the snapshot is embedded, so only a broken build gets here
+		panic(err)
+	}
+	return s, why
+}
+func newSite(path string, forceMock bool) *site {
+	s, why := load(path, forceMock)
+	return &site{s: s, dbPath: path, forced: forceMock, why: why}
 }
 
-func routes(s *store.Store, start time.Time) *http.ServeMux {
+func (st *site) get() *store.Store {
+	st.mu.RLock()
+	defer st.mu.RUnlock()
+	return st.s
+}
+
+// sourceText is the footer's "Authors from ..." line.
+func (st *site) sourceText() string {
+	st.mu.RLock()
+	defer st.mu.RUnlock()
+	if st.s.Source == "database" {
+		return "the shared database (" + st.dbPath + ")"
+	}
+	return "the mock snapshot (" + st.why + ")"
+}
+
+func (st *site) useDB(path string) error {
+	s, why := load(path, false)
+	if why != "" {
+		return &dbError{why}
+	}
+	st.mu.Lock()
+	st.s, st.dbPath, st.forced, st.why = s, path, false, ""
+	st.mu.Unlock()
+	if st.settings != nil {
+		return st.settings(path)
+	}
+	return nil
+}
+
+type dbError struct{ why string }
+
+func (e *dbError) Error() string { return e.why }
+
+func routes(st *site, start time.Time) *http.ServeMux {
 	mux := http.NewServeMux()
+	page := func(extra map[string]any) map[string]any {
+		data := map[string]any{"Source": st.sourceText(), "Version": app.Version, "Name": app.Name}
+		for k, v := range extra {
+			data[k] = v
+		}
+		return data
+	}
 	mux.HandleFunc("GET /api/posts", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, http.StatusOK, s.Published())
+		writeJSON(w, http.StatusOK, st.get().Published())
 	})
 	mux.HandleFunc("GET /api/posts/{slug}", func(w http.ResponseWriter, r *http.Request) {
+		s := st.get()
 		p, hint, ok := s.Get(r.PathValue("slug"))
 		if !ok {
 			notFound(w, hint)
@@ -66,6 +121,7 @@ func routes(s *store.Store, start time.Time) *http.ServeMux {
 		writeJSON(w, http.StatusOK, map[string]any{"post": p, "author": s.Author(p)})
 	})
 	mux.HandleFunc("GET /api/posts/{slug}/related", func(w http.ResponseWriter, r *http.Request) {
+		s := st.get()
 		if _, hint, ok := s.Get(r.PathValue("slug")); !ok {
 			notFound(w, hint)
 			return
@@ -73,26 +129,41 @@ func routes(s *store.Store, start time.Time) *http.ServeMux {
 		writeJSON(w, http.StatusOK, s.Related(r.PathValue("slug"), 3))
 	})
 	mux.HandleFunc("GET /api/search", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, http.StatusOK, s.Search(r.URL.Query().Get("q")))
+		writeJSON(w, http.StatusOK, st.get().Search(r.URL.Query().Get("q")))
 	})
 	mux.HandleFunc("GET /api/source", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]any{"authors_from": s.Source, "counts": s.Counts()})
+		s := st.get()
+		writeJSON(w, http.StatusOK, map[string]any{"authors_from": s.Source, "counts": s.Counts(), "version": app.Version})
 	})
 	mux.Handle("/api/health", health.Handler(start))
 
+	icon := func(name, kind string) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			b, _ := icons.ReadFile("icon/" + name)
+			w.Header().Set("Content-Type", kind)
+			w.Header().Set("Cache-Control", "max-age=86400")
+			w.Write(b)
+		}
+	}
+	mux.HandleFunc("GET /favicon.ico", icon("app.ico", "image/x-icon"))
+	mux.HandleFunc("GET /icon-32.png", icon("app-32.png", "image/png"))
+	mux.HandleFunc("GET /icon-256.png", icon("app-256.png", "image/png"))
+
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+		s := st.get()
 		q := r.URL.Query().Get("q")
 		posts := s.Published()
 		if q != "" {
 			posts = s.Search(q)
 		}
-		render(w, http.StatusOK, indexPage, map[string]any{"Posts": posts, "Q": q, "Source": s.Source,
-			"Count": textfmt.Plural(len(posts), "1 post", itoa(len(posts))+" posts")})
+		render(w, http.StatusOK, indexPage, page(map[string]any{"Posts": posts, "Q": q,
+			"Count": textfmt.Plural(len(posts), "1 post", itoa(len(posts))+" posts")}))
 	})
 	mux.HandleFunc("GET /posts/{slug}", func(w http.ResponseWriter, r *http.Request) {
+		s := st.get()
 		p, hint, ok := s.Get(r.PathValue("slug"))
 		if !ok {
-			render(w, http.StatusNotFound, missingPage, map[string]any{"Hint": hint, "Source": s.Source})
+			render(w, http.StatusNotFound, missingPage, page(map[string]any{"Hint": hint}))
 			return
 		}
 		var body struct {
@@ -101,8 +172,30 @@ func routes(s *store.Store, start time.Time) *http.ServeMux {
 			} `json:"blocks"`
 		}
 		_ = json.Unmarshal(p.Body, &body)
-		render(w, http.StatusOK, postPage, map[string]any{"Post": p, "Author": s.Author(p), "Blocks": body.Blocks,
-			"Related": s.Related(p.Slug, 3), "Source": s.Source})
+		render(w, http.StatusOK, postPage, page(map[string]any{"Post": p, "Author": s.Author(p), "Blocks": body.Blocks,
+			"Related": s.Related(p.Slug, 3)}))
+	})
+	mux.HandleFunc("GET /about", func(w http.ResponseWriter, r *http.Request) {
+		st.mu.RLock()
+		path := st.dbPath
+		st.mu.RUnlock()
+		render(w, http.StatusOK, aboutPage, page(map[string]any{"DB": path, "Credit": app.Credit,
+			"Publisher": app.Publisher, "Counts": st.get().Counts(), "Saved": r.URL.Query().Get("saved") != ""}))
+	})
+	mux.HandleFunc("POST /about", func(w http.ResponseWriter, r *http.Request) {
+		path := r.FormValue("db")
+		if abs, err := filepath.Abs(path); err == nil {
+			path = abs
+		}
+		if err := st.useDB(path); err != nil {
+			st.mu.RLock()
+			current := st.dbPath
+			st.mu.RUnlock()
+			render(w, http.StatusBadRequest, aboutPage, page(map[string]any{"DB": current, "Credit": app.Credit,
+				"Publisher": app.Publisher, "Counts": st.get().Counts(), "Error": path + ": " + err.Error()}))
+			return
+		}
+		http.Redirect(w, r, "/about?saved=1", http.StatusSeeOther)
 	})
 	return mux
 }
@@ -114,7 +207,6 @@ func itoa(n int) string {
 
 func writeJSON(w http.ResponseWriter, code int, v any) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(v)
 }
@@ -137,19 +229,22 @@ func render(w http.ResponseWriter, code int, t *template.Template, data any) {
 
 const layout = `{{define "top"}}<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>ACME Inc. Journal</title>
+<link rel="icon" href="/favicon.ico">
 <style>
 body{margin:0;font:16px/1.55 system-ui,sans-serif;color:#1d2330;background:#f6f7f9}
-@media (prefers-color-scheme:dark){body{color:#e6e8ec;background:#14171c}a{color:#8fb0ff}.card{background:#1d2128!important;border-color:#2e343e!important}}
 header,main,footer{max-width:760px;margin:0 auto;padding:16px}
-header{display:flex;gap:12px;align-items:center;flex-wrap:wrap}header h1{font-size:20px;margin:0;flex:1}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap}header h1{font-size:20px;margin:0;flex:1;display:flex;gap:10px;align-items:center}
+.px{image-rendering:pixelated;image-rendering:crisp-edges}
 a{color:#2f5bd3;text-decoration:none}a:hover{text-decoration:underline}
 .card{background:#fff;border:1px solid #dde1e7;border-radius:8px;padding:14px 16px;margin-bottom:12px}
 .meta{color:#667085;font-size:13px}h2{font-size:18px;margin:0 0 4px}
 input{font:inherit;padding:4px 8px;border:1px solid #c3c8d0;border-radius:6px}
+.wide{width:100%;box-sizing:border-box}.error{color:#b42318}
 footer{color:#667085;font-size:12px}
-</style></head><body><header><h1><a href="/">ACME Inc. Journal</a></h1>
-<form action="/"><input name="q" type="search" value="{{.Q}}" placeholder="Search posts"></form></header><main>{{end}}
-{{define "bottom"}}</main><footer>Fictional company; text is lorem ipsum. Authors from {{.Source}}. JSON at <a href="/api/posts">/api/posts</a>.</footer></body></html>{{end}}`
+@media (prefers-color-scheme:dark){body{color:#e6e8ec;background:#14171c}a{color:#8fb0ff}.card{background:#1d2128!important;border-color:#2e343e!important}}
+</style></head><body><header><h1><img class="px" src="/icon-32.png" width="32" height="32" alt=""><a href="/">ACME Inc. Journal</a></h1>
+<form action="/"><input name="q" type="search" value="{{.Q}}" placeholder="Search posts"></form><a href="/about">About</a></header><main>{{end}}
+{{define "bottom"}}</main><footer>{{.Name}} {{.Version}} · Fictional company; text is lorem ipsum. Authors from {{.Source}}.</footer></body></html>{{end}}`
 
 var (
 	indexPage = template.Must(template.Must(template.New("index").Parse(layout)).Parse(`{{template "top" .}}
@@ -164,5 +259,13 @@ var (
 {{template "bottom" .}}`))
 	missingPage = template.Must(template.Must(template.New("missing").Parse(layout)).Parse(`{{template "top" .}}
 <div class="card"><h2>Post not found</h2>{{if .Hint}}<p>Did you mean <a href="/posts/{{.Hint}}">{{.Hint}}</a>?</p>{{end}}</div>
+{{template "bottom" .}}`))
+	aboutPage = template.Must(template.Must(template.New("about").Parse(layout)).Parse(`{{template "top" .}}
+<div class="card" style="text-align:center"><img class="px" src="/icon-256.png" width="128" height="128" alt="">
+<h2>{{.Name}} {{.Version}}</h2><p class="meta">{{.Publisher}}</p><p class="meta">{{.Credit}}<br>Code: AGPL-3.0. All data is fictional.</p></div>
+<div class="card"><h2>Shared database</h2><p class="meta">Post authors come from its employees table ({{.Counts.authors}} known). Posts stay in the CMS's own snapshot.</p>
+<form method="post" action="/about"><input class="wide" name="db" value="{{.DB}}" spellcheck="false">
+<p><button type="submit">Use this database</button>{{if .Saved}} <span class="meta">Saved.</span>{{end}}</p></form>
+{{if .Error}}<p class="error">{{.Error}}</p>{{end}}</div>
 {{template "bottom" .}}`))
 )
