@@ -1,18 +1,13 @@
 // Package store holds the CMS's posts in memory and answers the read API: published lists, lookups by
-// slug with a did-you-mean, related posts and a plain-text search. Posts come from mock/posts.json;
-// authors come from the snapshot's employees or, when connected, from the CRUD hub.
+// slug with a did-you-mean, related posts and a plain-text search. Posts come from the snapshot's
+// posts.json; authors from its employees.json or from the shared database's employees table.
 package store
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
+	"io/fs"
 	"sort"
 	"strings"
-	"time"
 
 	"acme/cms/internal/related"
 	"acme/cms/internal/suggest"
@@ -49,7 +44,7 @@ type Summary struct {
 
 // Store is read-only after New and safe for concurrent use.
 type Store struct {
-	Source  string // "mock" or the hub URL the authors came from
+	Source  string // where the authors came from: "mock" or "database"
 	posts   []Post
 	bySlug  map[string]int
 	authors map[int]Author
@@ -76,58 +71,31 @@ func New(posts []Post, authors []Author, source string) *Store {
 	return s
 }
 
-func readJSON(path string, v any) error {
-	b, err := os.ReadFile(path)
+func readJSON(fsys fs.FS, name string, v any) error {
+	b, err := fs.ReadFile(fsys, name)
 	if err != nil {
 		return err
 	}
 	return json.Unmarshal(b, v)
 }
 
-// FromMock loads posts and authors from a snapshot folder.
-func FromMock(dir string) (*Store, error) {
-	var posts []Post
+// FromMock loads posts and authors from a snapshot (posts.json, employees.json at the root of fsys).
+func FromMock(fsys fs.FS) (*Store, error) {
 	var authors []Author
-	if err := readJSON(filepath.Join(dir, "posts.json"), &posts); err != nil {
+	if err := readJSON(fsys, "employees.json", &authors); err != nil {
 		return nil, err
 	}
-	if err := readJSON(filepath.Join(dir, "employees.json"), &authors); err != nil {
-		return nil, err
-	}
-	return New(posts, authors, "mock"), nil
+	return FromAuthors(fsys, authors, "mock")
 }
 
-// FromHub loads posts from the snapshot (the CMS owns them) and authors live from the hub's
-// employees table, paging with ?limit&offset.
-func FromHub(dir, hub string) (*Store, error) {
+// FromAuthors loads posts from the snapshot (the CMS owns them) with the given authors, e.g. the
+// shared database's employees; source says where the authors came from.
+func FromAuthors(fsys fs.FS, authors []Author, source string) (*Store, error) {
 	var posts []Post
-	if err := readJSON(filepath.Join(dir, "posts.json"), &posts); err != nil {
+	if err := readJSON(fsys, "posts.json", &posts); err != nil {
 		return nil, err
 	}
-	client := &http.Client{Timeout: 10 * time.Second}
-	var authors []Author
-	for {
-		resp, err := client.Get(fmt.Sprintf("%s/api/employees?limit=500&offset=%d", hub, len(authors)))
-		if err != nil {
-			return nil, err
-		}
-		body, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if err != nil {
-			return nil, err
-		}
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("GET /api/employees: %s", resp.Status)
-		}
-		var page []Author
-		if err := json.Unmarshal(body, &page); err != nil {
-			return nil, err
-		}
-		authors = append(authors, page...)
-		if len(page) < 500 {
-			return New(posts, authors, hub), nil
-		}
-	}
+	return New(posts, authors, source), nil
 }
 
 // Author returns the post's author name, or "ACME Inc." when the id is unknown.

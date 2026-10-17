@@ -2,8 +2,7 @@ package store
 
 import (
 	"encoding/json"
-	"net/http"
-	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -67,7 +66,7 @@ func TestRelatedAndSearch(t *testing.T) {
 }
 
 func TestFromMockSnapshot(t *testing.T) {
-	s, err := FromMock("../../mock")
+	s, err := FromMock(os.DirFS("../../mock"))
 	if err != nil {
 		t.Skip("no mock snapshot:", err)
 	}
@@ -82,25 +81,12 @@ func TestFromMockSnapshot(t *testing.T) {
 	}
 }
 
-func TestFromHubPagesEmployees(t *testing.T) {
-	calls := 0
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		calls++
-		if r.URL.Path != "/api/employees" || r.URL.Query().Get("limit") != "500" {
-			http.NotFound(w, r)
-			return
-		}
-		w.Write([]byte(`[{"id": 7, "name": "Kenji Sato", "role": "Sales"}]`))
-	}))
-	defer srv.Close()
-	s, err := FromHub("../../mock", srv.URL)
+func TestFromAuthorsKeepsSnapshotPosts(t *testing.T) {
+	s, err := FromAuthors(os.DirFS("../../mock"), []Author{{ID: 1, Name: "Kenji Sato"}}, "database")
 	if err != nil {
 		t.Skip("no mock snapshot:", err)
 	}
-	if calls != 1 || s.Source != srv.URL || s.Counts()["authors"] != 1 {
-		t.Fatalf("calls %d source %q counts %v", calls, s.Source, s.Counts())
-	}
-	if _, err := FromHub("../../mock", "http://127.0.0.1:1"); err == nil {
-		t.Fatal("an unreachable hub did not fail")
+	if s.Source != "database" || s.Counts()["authors"] != 1 || len(s.Published()) == 0 {
+		t.Fatalf("source %q counts %v", s.Source, s.Counts())
 	}
 }
