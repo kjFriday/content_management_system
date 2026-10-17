@@ -1,9 +1,9 @@
 # Provenance
 
 The packages under `internal/` were adapted from code the owner staged,
-read-only, in `D:\Portfolio\_extracted`. Each source is identified below by
+read-only, in the owner's private staging folder (`_extracted/`, kept locally and not published). Each source is identified below by
 its SHA-256, which is the key to its row in
-`D:\Portfolio\_extracted\MANIFEST.tsv`; that row gives the staged path, the
+the owner's private staging manifest (`_extracted/MANIFEST.tsv`, kept locally and not published); that row gives the staged path, the
 symbols used and the licence decision (owner reuse). The hashes were checked
 against the staged files on 2026-10-16. Only the listed symbols were taken.
 No licence header or narrative comment was copied; a few one-line technical
