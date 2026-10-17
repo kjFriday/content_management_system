@@ -16,13 +16,8 @@ comments keep close to the original wording.
 `module acme/cms`, `go 1.24`, no `require` lines. Go 1.22 or later is
 needed for the method-and-path patterns and `r.PathValue` in `main.go`.
 
-`main.go` is unchanged and does not build as is. It needs
-`go get github.com/mattn/go-sqlite3`, which uses cgo and therefore a C
-compiler (for example gcc from MinGW-w64 on Windows). The `internal/`
-packages use only the standard library and build and test without cgo:
-
-    go vet ./internal/...
-    go test ./internal/...
+(Superseded in 0.2.0: `main.go` is the desktop CMS. It builds without cgo, using the pure-Go
+`modernc.org/sqlite` and `github.com/jchv/go-webview2`; the cgo design stays in `reference/`.)
 
 ### `internal/related/related.go`, `related_test.go`
 
@@ -112,5 +107,10 @@ packages use only the standard library and build and test without cgo:
   Any other method gets 405.
 - The terminal-size reading and the formatted text lines were dropped. The
   process start time is a parameter instead of a package global.
-- Not done: wiring `GET /api/health` into `main.go` (and adding a
-  `db.PingContext` check there). `main.go` was left untouched on purpose.
+- `GET /api/health` is wired into `main.go`.
+
+## New in 0.2.0 (no staged source)
+
+| File | What |
+|---|---|
+| `internal/app`, `internal/install`, `internal/desktop`, `internal/db`, `cli.go` | Written for the desktop program; `internal/install` ports the CRUD hub's `installer.py` (same plan, PowerShell script and sandbox) to Go. |
