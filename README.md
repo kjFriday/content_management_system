@@ -43,6 +43,8 @@ Installs for the current user (no admin rights): copies the exe to
 own settings and WebView2 profile). `-root DIR` does it all inside DIR instead. Other flags: `-version`,
 `-quiet`, `-smoke FILE`.
 
+`wizard-maker.exe build setup.json` (ACME Wizard Maker) makes the setup, `dist\ACME Journal-0.2.0-setup.exe`.
+
 | Path | What |
 |---|---|
 | `GET /` | Published posts, newest first; `?q=` searches |
