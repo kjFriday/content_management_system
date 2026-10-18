@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: main.go
+// About: Command acme-cms is ACME Journal, ACME Inc.'s posts: a desktop window over a small set of...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 // Command acme-cms is ACME Journal, ACME Inc.'s posts: a desktop window over a small set of pages
 // and a read-only JSON API, served in-process to that window only.
 //
@@ -269,3 +278,5 @@ var (
 {{if .Error}}<p class="error">{{.Error}}</p>{{end}}</div>
 {{template "bottom" .}}`))
 )
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=4aee295492da343464e9a64c449397297d8c8cfc910687f765da6b021aeb7e55 ====

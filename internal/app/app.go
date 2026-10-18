@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/app/app.go
+// About: Package app is the CMS's identity (name, version, credit) and where it keeps its files.
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 // Package app is the CMS's identity (name, version, credit) and where it keeps its files.
 //
 // The shared database is the only link between the ACME programs. Its path is chosen in this order:
@@ -93,3 +102,5 @@ func ResolveDB(flag string, env Env) string {
 	}
 	return DefaultDB(env)
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=8abffe3120744084bbdb9062b97528081c35b5204a3a168acfabfd484468b56d ====

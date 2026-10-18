@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/related/related_test.go
+// About: Tests for package related.
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 package related
 
 import (
@@ -366,3 +375,5 @@ func TestBodyText(t *testing.T) {
 		})
 	}
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=ffd335d2309beea12c93eba63f41ef88ea43f3803a8ad5931b762a6c98f6f4f1 ====

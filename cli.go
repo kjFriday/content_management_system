@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: cli.go
+// About: Part of package main in content_management_system.
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 package main
 
 import (
@@ -172,3 +181,5 @@ func smoke(file string, st *site, w desktop.Window, seen chan [2]any) {
 	os.WriteFile(file, b, 0o644)
 	w.Close()
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=e1d5521c33a2573d43f5b2d47a4d06475d717b08ec85211368cd597f911838e2 ====

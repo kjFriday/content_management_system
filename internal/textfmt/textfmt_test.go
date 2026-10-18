@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/textfmt/textfmt_test.go
+// About: Tests for package textfmt.
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 package textfmt
 
 import (
@@ -140,3 +149,5 @@ func TestPadRight(t *testing.T) {
 		t.Errorf("fixed-width column = %q", got)
 	}
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=8d8eb60bfffe4f9548cbfa1a237b7cce0c4f242dbc23006511de8449aff8871a ====

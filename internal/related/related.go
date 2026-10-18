@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/related/related.go
+// About: Package related ranks posts by content similarity, for a "related posts" list.
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 // Package related ranks posts by content similarity, for a "related
 // posts" list. It is a small TF-IDF and cosine-similarity engine with no
 // dependencies outside the standard library.
@@ -401,3 +410,5 @@ func plainText(s string) string {
 func isTagStart(c byte) bool {
 	return c == '/' || c == '!' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=ad0e26791cda43469dacbe99277ec8db6ff5af7d522b77d14284fb5bd3bddcae ====

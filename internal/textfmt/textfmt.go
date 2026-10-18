@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/textfmt/textfmt.go
+// About: Package textfmt holds small string helpers for listings, logs and the admin views.
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 // Package textfmt holds small string helpers for listings, logs and the
 // admin views. Lengths are counted in runes (code points), not bytes and
 // not display columns: a wide CJK character still counts as one, and an
@@ -113,3 +122,5 @@ func PadRight(s string, n int) string {
 	}
 	return s
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=eb594ab31dfeefad4507c6fc4a740c902945824409f9bcc0db7ac46cb4ee021b ====

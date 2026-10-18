@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/install/install.go
+// About: Package install installs or uninstalls an ACME program for the current user (no admin...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 // Package install installs or uninstalls an ACME program for the current user (no admin rights).
 //
 // Install copies the exe and its icon to %LOCALAPPDATA%\Programs\ACME Inc\<name>\ with an install.json
@@ -465,3 +474,5 @@ func DeleteAfterExit(dir string) error {
 	cmd.Dir = os.TempDir()
 	return cmd.Start()
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=ac38dbe4ff33755674987bb701207657fa82830b33357c77b413febcee272ac3 ====

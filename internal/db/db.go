@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/db/db.go
+// About: Package db opens the shared ACME database by path (read-only: the CMS only reads post...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 // Package db opens the shared ACME database by path (read-only: the CMS only reads post authors from
 // it). The CRUD hub owns the schema; this package never creates or changes tables.
 package db
@@ -102,3 +111,5 @@ func LoadAuthors(path string) ([]store.Author, error) {
 	}
 	return authors, err
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=3d0914ecedb8551d4149f8bc220c29c8c0fba6c1e0bfd1647b448c511baf4285 ====

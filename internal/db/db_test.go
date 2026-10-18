@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/db/db_test.go
+// About: Tests for package db.
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 package db
 
 import (
@@ -73,3 +82,5 @@ func TestSchemaCheck(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=1825125b99e9de29eaeb45717847c974847b32652527b275a0ee9e9982f94b9c ====

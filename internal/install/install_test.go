@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/install/install_test.go
+// About: Tests for package install.
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 package install
 
 import (
@@ -384,3 +393,5 @@ func TestRunAndWaitReturnsTheExitCode(t *testing.T) {
 		t.Fatal("a missing exe ran")
 	}
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=5812ab5d463a217dcbb4850dc60c219a69eaf334efee0f4b0afac7d312d22229 ====

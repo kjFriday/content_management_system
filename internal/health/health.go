@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/health/health.go
+// About: Package health reports basic Go runtime statistics for a service health endpoint such as...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 // Package health reports basic Go runtime statistics for a service
 // health endpoint such as GET /api/health.
 package health
@@ -55,3 +64,5 @@ func Handler(start time.Time) http.HandlerFunc {
 		json.NewEncoder(w).Encode(Take(start))
 	}
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=8511f54e0c3da3aa2cd366c8bd5eeebb75acf40f2dd4199846addc1ff7cf5c49 ====

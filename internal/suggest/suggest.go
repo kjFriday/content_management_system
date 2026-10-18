@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/suggest/suggest.go
+// About: Package suggest offers a "did you mean" hint for a missed lookup, such as a 404 on an...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 // Package suggest offers a "did you mean" hint for a missed lookup, such
 // as a 404 on an unknown post slug.
 package suggest
@@ -69,3 +78,5 @@ func Suggest(word string, vocab []string) (string, bool) {
 	}
 	return best, bestD >= 0
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=4ea7637eafed5c86305cad61e10d5564d787a7e4756fdd45271b7148d61ec77f ====

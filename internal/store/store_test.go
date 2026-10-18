@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/store/store_test.go
+// About: Tests for package store.
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 package store
 
 import (
@@ -90,3 +99,5 @@ func TestFromAuthorsKeepsSnapshotPosts(t *testing.T) {
 		t.Fatalf("source %q counts %v", s.Source, s.Counts())
 	}
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=c36cf34a2af3f3957fbecef2a319ae529b8a01eeb76b33b57e02686893311fcc ====

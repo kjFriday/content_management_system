@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/suggest/suggest_test.go
+// About: Tests for package suggest.
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 package suggest
 
 import "testing"
@@ -103,3 +112,5 @@ func TestSuggestCountsRunes(t *testing.T) {
 		t.Errorf("Suggest(日本語) = (%q, %v), want a prefix match", got, ok)
 	}
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=dd50cdec4d2705d44a687ddd33df54cd5c4b39c6a9ae0b3c2e0c5d0836513144 ====

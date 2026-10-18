@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/store/store.go
+// About: Package store holds the CMS's posts in memory and answers the read API: published lists...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 // Package store holds the CMS's posts in memory and answers the read API: published lists, lookups by
 // slug with a did-you-mean, related posts and a plain-text search. Posts come from the snapshot's
 // posts.json; authors from its employees.json or from the shared database's employees table.
@@ -194,3 +203,5 @@ func (s *Store) Counts() map[string]int {
 	}
 	return c
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=66351f72a4128cdb23f0fb3b773d5f8ab58897ed96eae1a44c73ad1d364a0fc9 ====

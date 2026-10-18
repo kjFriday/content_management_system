@@ -1,3 +1,12 @@
+// ==== ACME Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/health/health_test.go
+// About: Tests for package health.
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
 package health
 
 import (
@@ -122,3 +131,5 @@ func TestHandlerOverHTTP(t *testing.T) {
 		t.Errorf("HEAD status = %d, want 200", head.StatusCode)
 	}
 }
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=83401cb04649db443ae2208df13b12ab5d780ce128a7bbd547fdbea4def97a06 ====
