@@ -1,0 +1,16 @@
+{
+  "id": "ACME.CMS",
+  "name": "ACME Journal",
+  "version": "0.2.0",
+  "publisher": "ACME Inc. (fictional)",
+  "group": "ACME Inc",
+  "icon": "icon/app.ico",
+  "files": [
+    {"from": "acme-cms.exe"}
+  ],
+  "run": {"program": "acme-cms.exe"},
+  "askFolder": true,
+  "shortcuts": {"ask": true, "startMenu": true, "desktop": false},
+  "purge": ["{localappdata}\\ACME Inc\\ACME.CMS"],
+  "output": "dist/{name}-{version}-setup.exe"
+}
