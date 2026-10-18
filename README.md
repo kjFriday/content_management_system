@@ -18,7 +18,7 @@ SameSite=Strict cookie, and every other request without it, or with another `Hos
 ## Build and run
 
 ```bash
-go build -ldflags "-H windowsgui" -o acme-cms.exe .
+go build -trimpath -ldflags "-H windowsgui" -o acme-cms.exe .
 ```
 
 ```bash
@@ -27,7 +27,8 @@ acme-cms.exe
 
 `go run . -serve` serves the same pages without a window on `http://127.0.0.1:8720/` (`-addr` changes
 it), for development. `rsrc_windows_amd64.syso` embeds the pixel icon and a DPI-aware manifest; it is
-generated from `icon/app.res` by the portfolio's `tools/pixel_icons.py --syso`.
+generated from `icon/app.res` by the portfolio's `tools/pixel_icons.py --syso`. `-trimpath` keeps the
+build machine's paths out of the exe.
 
 ## Install
 
