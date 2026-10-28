@@ -99,6 +99,14 @@ func (st *site) sourceText() string {
 	return "the mock snapshot (" + st.why + ")"
 }
 
+// publicSource is the footer line for -public: where authors came from, without paths or errors.
+func (st *site) publicSource() string {
+	if st.get().Source == "database" {
+		return "the shared database"
+	}
+	return "the mock snapshot"
+}
+
 func (st *site) useDB(path string) error {
 	s, why := load(path, false)
 	if why != "" {
@@ -117,10 +125,16 @@ type dbError struct{ why string }
 
 func (e *dbError) Error() string { return e.why }
 
-func routes(st *site, start time.Time) *http.ServeMux {
+// routes are the pages and API. public (-public) leaves out what only the owner should see or do: the
+// database path and its form, local paths and errors in the footer, and the runtime health readout.
+func routes(st *site, start time.Time, public bool) *http.ServeMux {
 	mux := http.NewServeMux()
 	page := func(extra map[string]any) map[string]any {
-		data := map[string]any{"Source": st.sourceText(), "Version": app.Version, "Name": app.Name}
+		source := st.sourceText()
+		if public {
+			source = st.publicSource()
+		}
+		data := map[string]any{"Source": source, "Version": app.Version, "Name": app.Name, "Public": public}
 		for k, v := range extra {
 			data[k] = v
 		}
@@ -153,7 +167,9 @@ func routes(st *site, start time.Time) *http.ServeMux {
 		s := st.get()
 		writeJSON(w, http.StatusOK, map[string]any{"authors_from": s.Source, "counts": s.Counts(), "version": app.Version})
 	})
-	mux.Handle("/api/health", health.Handler(start))
+	if !public {
+		mux.Handle("/api/health", health.Handler(start))
+	}
 
 	icon := func(name, kind string) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
@@ -194,12 +210,18 @@ func routes(st *site, start time.Time) *http.ServeMux {
 			"Related": s.Related(p.Slug, 3)}))
 	})
 	mux.HandleFunc("GET /about", func(w http.ResponseWriter, r *http.Request) {
-		st.mu.RLock()
-		path := st.dbPath
-		st.mu.RUnlock()
+		path := ""
+		if !public {
+			st.mu.RLock()
+			path = st.dbPath
+			st.mu.RUnlock()
+		}
 		render(w, http.StatusOK, aboutPage, page(map[string]any{"DB": path, "Credit": app.Credit,
 			"Publisher": app.Publisher, "Counts": st.get().Counts(), "Saved": r.URL.Query().Get("saved") != ""}))
 	})
+	if public {
+		return mux // no POST /about: the mux answers 405
+	}
 	mux.HandleFunc("POST /about", func(w http.ResponseWriter, r *http.Request) {
 		path := r.FormValue("db")
 		if abs, err := filepath.Abs(path); err == nil {
@@ -235,6 +257,19 @@ func notFound(w http.ResponseWriter, hint string) {
 		body["did_you_mean"] = hint
 	}
 	writeJSON(w, http.StatusNotFound, body)
+}
+
+// secure adds the headers a site served beyond the desktop window should send.
+func secure(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("X-Frame-Options", "DENY")
+		h.Set("Referrer-Policy", "same-origin")
+		h.Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; "+
+			"form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
+		next.ServeHTTP(w, r)
+	})
 }
 
 func render(w http.ResponseWriter, code int, t *template.Template, data any) {
@@ -282,10 +317,10 @@ var (
 <div class="card" style="text-align:center"><img class="px" src="/icon-256.png" width="128" height="128" alt="">
 <h2>{{.Name}} {{.Version}}</h2><p class="meta">{{.Publisher}}</p><p class="meta">{{.Credit}}<br>Code: AGPL-3.0. All data is fictional.</p></div>
 <div class="card"><h2>Shared database</h2><p class="meta">Post authors come from its employees table ({{.Counts.authors}} known). Posts stay in the CMS's own snapshot.</p>
-<form method="post" action="/about"><input class="wide" name="db" value="{{.DB}}" spellcheck="false">
+{{if not .Public}}<form method="post" action="/about"><input class="wide" name="db" value="{{.DB}}" spellcheck="false">
 <p><button type="submit">Use this database</button>{{if .Saved}} <span class="meta">Saved.</span>{{end}}</p></form>
-{{if .Error}}<p class="error">{{.Error}}</p>{{end}}</div>
+{{if .Error}}<p class="error">{{.Error}}</p>{{end}}{{end}}</div>
 {{template "bottom" .}}`))
 )
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=e3cb0091c9bd2b30ad1148d51e9a2855612c1b4799154b0bffaa071bd40c38ce ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=f71c5ba51d0e4a78f0ca62c7c614679351140430f763d4478fc561c62b5feef1 ====

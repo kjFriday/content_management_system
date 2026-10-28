@@ -36,7 +36,7 @@ func server(t *testing.T) (*httptest.Server, *store.Store) {
 	t.Helper()
 	st := newSite(filepath.Join(t.TempDir(), "none.db"), false)
 	s := st.get()
-	srv := httptest.NewServer(routes(st, time.Now()))
+	srv := httptest.NewServer(routes(st, time.Now(), false))
 	t.Cleanup(srv.Close)
 	return srv, s
 }
@@ -123,4 +123,43 @@ func TestIconsAndAboutPage(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=06b593378a6ba60ab3a746e90390641851473ec3ada3e41c0ecc1fd74d60109a ====
+func TestPublic(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "none.db")
+	st := newSite(dbPath, false)
+	srv := httptest.NewServer(secure(routes(st, time.Now(), true)))
+	t.Cleanup(srv.Close)
+	first := st.get().Published()[0]
+	for _, path := range []string{"/", "/posts/" + first.Slug, "/about", "/api/posts", "/api/source"} {
+		resp, err := http.Get(srv.URL + path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		body := string(b)
+		if resp.StatusCode != 200 {
+			t.Fatalf("%s: %d", path, resp.StatusCode)
+		}
+		if strings.Contains(body, dbPath) || strings.Contains(body, filepath.Base(dbPath)) || strings.Contains(body, `name="db"`) {
+			t.Fatalf("%s shows the database path or its form: %.200s", path, body)
+		}
+		for _, h := range []string{"Content-Security-Policy", "X-Content-Type-Options", "X-Frame-Options", "Referrer-Policy"} {
+			if resp.Header.Get(h) == "" {
+				t.Fatalf("%s: no %s header", path, h)
+			}
+		}
+	}
+	resp, err := http.PostForm(srv.URL+"/about", map[string][]string{"db": {dbPath}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusMethodNotAllowed {
+		t.Fatalf("POST /about: %d, want 405", resp.StatusCode)
+	}
+	if code, _ := get(t, srv.URL+"/api/health"); code != 404 {
+		t.Fatalf("health: %d, want 404", code)
+	}
+}
+
+// ==== stamp v1 | author=kjFriday | hmac-sha256=5571d854ec1e515b19bcbb3667780500f7f430bc438d109e99c9961c3b3c51cf ====

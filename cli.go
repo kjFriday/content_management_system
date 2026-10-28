@@ -19,6 +19,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -26,6 +27,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"generic-company/cms/internal/app"
@@ -36,9 +39,9 @@ import (
 const exeName = "generic-company-cms.exe"
 
 type options struct {
-	db, addr, root, smoke              string
-	mock, serve, version, inst, uninst bool
-	desktopShortcut, quiet, purge      bool
+	db, addr, root, smoke                      string
+	mock, serve, public, version, inst, uninst bool
+	desktopShortcut, quiet, purge              bool
 }
 
 func parse(args []string, out io.Writer) (options, error) {
@@ -48,7 +51,8 @@ func parse(args []string, out io.Writer) (options, error) {
 	fs.StringVar(&o.db, "db", "", `shared database (default: GENERIC_COMPANY_DB, the saved setting, or %LOCALAPPDATA%\Generic Company Inc\generic_company.db)`)
 	fs.BoolVar(&o.mock, "mock", false, "authors from the embedded snapshot, not the database")
 	fs.BoolVar(&o.serve, "serve", false, "no window: serve the pages on -addr (for development)")
-	fs.StringVar(&o.addr, "addr", "127.0.0.1:8720", "with -serve: listen address")
+	fs.BoolVar(&o.public, "public", false, "no window: serve a public, read-only site on -addr (no database form, no local paths)")
+	fs.StringVar(&o.addr, "addr", "127.0.0.1:8720", "with -serve or -public: listen address (e.g. :8080 for every interface)")
 	fs.BoolVar(&o.version, "version", false, "print the version")
 	fs.BoolVar(&o.inst, "install", false, "install for this user (Start menu, Apps & features)")
 	fs.BoolVar(&o.desktopShortcut, "desktop-shortcut", false, "with -install: add a desktop shortcut")
@@ -57,7 +61,28 @@ func parse(args []string, out io.Writer) (options, error) {
 	fs.BoolVar(&o.purge, "purge", false, "with -uninstall: also remove this program's settings")
 	fs.StringVar(&o.root, "root", "", `sandbox: install under this folder (registry goes to registry.json)`)
 	fs.StringVar(&o.smoke, "smoke", "", "open the window, write a JSON report to this file, close")
-	return o, fs.Parse(args)
+	err := fs.Parse(args)
+	o.serve = o.serve || o.public
+	return o, err
+}
+
+// listen serves handler on addr until Ctrl+C or SIGTERM. The timeouts stop slow clients from holding
+// connections open.
+func listen(addr string, handler http.Handler) error {
+	srv := &http.Server{Addr: addr, Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 10 * time.Second,
+		WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 64 << 10}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	done := make(chan error, 1)
+	go func() { done <- srv.ListenAndServe() }()
+	select {
+	case err := <-done:
+		return err
+	case <-ctx.Done():
+		wait, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		return srv.Shutdown(wait)
+	}
 }
 
 // tell prints, and also shows a message box unless -quiet (a windowsgui exe has no console).
@@ -153,10 +178,17 @@ func main() {
 	path := app.ResolveDB(o.db, os.Getenv)
 	st := newSite(path, o.mock)
 	st.settings = func(p string) error { return app.SaveSettings(os.Getenv, map[string]any{"db": p}) }
-	handler := routes(st, time.Now())
+	handler := routes(st, time.Now(), o.public)
 	if o.serve {
-		log.Printf("%s on http://%s/ (authors from %s)", app.Title, o.addr, st.sourceText())
-		log.Fatal(http.ListenAndServe(o.addr, handler))
+		if o.public {
+			log.Printf("%s on http://%s/ (public; authors from %s)", app.Title, o.addr, st.publicSource())
+		} else {
+			log.Printf("%s on http://%s/ (authors from %s)", app.Title, o.addr, st.sourceText())
+		}
+		if err := listen(o.addr, secure(handler)); err != nil {
+			log.Fatal(err)
+		}
+		return
 	}
 	opts := desktop.Options{Title: app.Title, Width: 1000, Height: 760, DataPath: app.DataDir(os.Getenv) + `\WebView2`, Handler: handler}
 	if o.smoke != "" {
@@ -191,4 +223,4 @@ func smoke(file string, st *site, w desktop.Window, seen chan [2]any) {
 	w.Close()
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=375e05c700bbdbd2a936905f8773bdb7edf89801206c0af77bc389ccb4634816 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=817a7071a65b15f6171e350d0dd211cd4f433e026cd1086624c0a64f30538a96 ====

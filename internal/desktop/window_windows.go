@@ -34,18 +34,6 @@ func init() {
 	runtime.LockOSThread()
 }
 
-// Options describe the window.
-type Options struct {
-	Title         string
-	Width, Height uint
-	DataPath      string       // WebView2 profile folder
-	Handler       http.Handler // the program's pages
-	// Bind adds JavaScript functions (window.<name>) that call into Go.
-	Bind map[string]any
-	// Ready, when set, runs on the UI thread once the window exists (e.g. for a smoke check).
-	Ready func(w Window)
-}
-
 // Window is the open window.
 type Window struct{ view webview2.WebView }
 
@@ -106,4 +94,4 @@ func MessageBox(title, text string) {
 	syscall.NewLazyDLL("user32.dll").NewProc("MessageBoxW").Call(0, uintptr(unsafe.Pointer(m)), uintptr(unsafe.Pointer(t)), 0x40)
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=59ba81cd75ab57001d1706a24c8db7393d683f0dccec28abf5e5f2f3897e2173 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=43eacc36e632ba26c8239daaf7e221f58752886d03299ba1d279bd4209a75303 ====

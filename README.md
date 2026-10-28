@@ -30,6 +30,29 @@ it), for development. `rsrc_windows_amd64.syso` embeds the pixel icon and a DPI-
 generated from `icon/app.res` by the portfolio's `tools/pixel_icons.py --syso`. `-trimpath` keeps the
 build machine's paths out of the exe.
 
+## Host it as a website
+
+```bash
+generic-company-cms.exe -public -addr :8080
+```
+
+`-public` serves the same pages and API without a window, for anyone who can reach `-addr` (`:8080` is
+every interface; the default stays `127.0.0.1:8720`). It is read-only and leaves out what only the
+owner should see: the About page has no database form (`POST /about` gets 405), the footer and the log
+name no local paths, and `/api/health` is not served. Every response carries a Content-Security-Policy,
+`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: same-origin`, and the
+server has read, write and idle timeouts and stops cleanly on Ctrl+C or SIGTERM.
+
+The exe speaks plain HTTP: put it behind something that does HTTPS (Caddy, nginx, or the host's own
+TLS). It also builds for Linux, where only `-serve` and `-public` work:
+
+```bash
+GOOS=linux go build -trimpath -o generic-company-cms .
+```
+
+With no shared database there (no `-db`, `GENERIC_COMPANY_DB` or saved setting), authors come from the
+embedded snapshot.
+
 ## Install
 
 ```bash
@@ -49,13 +72,13 @@ own settings and WebView2 profile). `-root DIR` does it all inside DIR instead. 
 |---|---|
 | `GET /` | Published posts, newest first; `?q=` searches |
 | `GET /posts/{slug}` | One post with three related posts; a bad slug gets a did-you-mean |
-| `GET /about` | Version, icon credit, and the shared database path (`POST` to change it) |
+| `GET /about` | Version, icon credit, and the shared database path (`POST` to change it; neither with `-public`) |
 | `GET /api/posts` | Published posts (title, slug, author, date, excerpt) |
 | `GET /api/posts/{slug}` | One post; `404` with `did_you_mean` for a near miss |
 | `GET /api/posts/{slug}/related` | TF-IDF related posts (`internal/related`) |
 | `GET /api/search?q=` | Posts containing every word |
 | `GET /api/source` | Where authors came from, counts and version |
-| `GET /api/health` | Runtime health (`internal/health`) |
+| `GET /api/health` | Runtime health (`internal/health`); not served with `-public` |
 
 Writing posts and moving them into the shared database are not built yet. The earlier SQLite design is
 kept in `reference/sqlite_server.go.txt`.

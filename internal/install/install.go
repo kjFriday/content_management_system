@@ -39,7 +39,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -211,7 +210,7 @@ type Reader func(script string) (string, error)
 func PowerShellOutput(script string) (string, error) {
 	cmd := exec.Command("powershell.exe", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", "-")
 	cmd.Stdin = strings.NewReader(script)
-	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000} // CREATE_NO_WINDOW
+	hide(cmd, "")
 	var out, errs strings.Builder
 	cmd.Stdout, cmd.Stderr = &out, &errs
 	if err := cmd.Run(); err != nil {
@@ -479,9 +478,9 @@ func DeleteAfterExit(dir string) error {
 	rd := fmt.Sprintf(`rd /s /q "%s"`, dir)
 	line := fmt.Sprintf(`cmd.exe /d /c "ping -n 3 127.0.0.1 >nul & %s & ping -n 2 127.0.0.1 >nul & %s & ping -n 2 127.0.0.1 >nul & %s"`, rd, rd, rd)
 	cmd := exec.Command("cmd.exe")
-	cmd.SysProcAttr = &syscall.SysProcAttr{CmdLine: line, HideWindow: true, CreationFlags: 0x08000000}
+	hide(cmd, line)
 	cmd.Dir = os.TempDir()
 	return cmd.Start()
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=b5e16fc2b8b8859aea12f20c9e06fbc45c6fc192ab6725bbbc417dceafb2f953 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=d634d7b02d70735cf13c06198e1c96172b9e36962afd5c5c8d6485500fe14ae3 ====
