@@ -1,13 +1,22 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
 // Project: content_management_system | File: internal/desktop/guard.go
-// About: Package desktop shows an ACME program's web pages in its own native window (Edge...
+// About: ==== Generic Company Inc. portfolio ===============================================...
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
-// Package desktop shows an ACME program's web pages in its own native window (Edge WebView2), served
+// ==== Generic Company Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/desktop/guard.go
+// About: Package desktop shows an Generic Company program's web pages in its own native window (Edge...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// Package desktop shows an Generic Company program's web pages in its own native window (Edge WebView2), served
 // by an in-process server on 127.0.0.1 that only that window can use.
 package desktop
 
@@ -19,7 +28,7 @@ import (
 )
 
 // Cookie carries the per-run token after the window's first request.
-const Cookie = "acme_session"
+const Cookie = "generic_company_session"
 
 // NewToken is 32 random hex characters, made fresh for every run.
 func NewToken() string {
@@ -59,4 +68,4 @@ func Guard(next http.Handler, token, host string) http.Handler {
 	})
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=d470f220311a7b36e2e2859ef74018aa7579f1d47e74bf6133b89651df80895f ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=e8209b01c7d81bebfc9a24592fb0058db194e3864aada1151f1ae1854da76b11 ====

@@ -1,14 +1,14 @@
 <img src="icon/app-256.png" width="64" height="64" alt="" style="image-rendering: pixelated">
 
-# ACME Journal (content management)
+# Generic Company Journal (content management)
 
-ACME Inc.'s journal as a desktop program: posts, search, related posts and a read-only JSON API, shown
-in its own window. ACME Inc. and everyone in it is fictional; post text is lorem ipsum.
+Generic Company Inc.'s journal as a desktop program: posts, search, related posts and a read-only JSON API, shown
+in its own window. Generic Company Inc. and everyone in it is fictional; post text is lorem ipsum.
 
 - **Posts** are the CMS's own content, embedded in the exe from `mock/posts.json` (60 posts).
-- **Authors** come from the shared ACME database's `employees` table, opened **read-only by path**. The
-  path is `-db PATH`, the `ACME_DB` environment variable, the one saved on the **About** page, or
-  `%LOCALAPPDATA%\ACME Inc\acme.db`. With no usable database the authors come from the embedded
+- **Authors** come from the shared Generic Company database's `employees` table, opened **read-only by path**. The
+  path is `-db PATH`, the `GENERIC_COMPANY_DB` environment variable, the one saved on the **About** page, or
+  `%LOCALAPPDATA%\Generic Company Inc\generic_company.db`. With no usable database the authors come from the embedded
   `mock/employees.json`, and the footer says so. `-mock` forces the snapshot.
 
 The window is Microsoft Edge WebView2 (part of Windows 10/11). The pages are served by the exe itself on
@@ -18,11 +18,11 @@ SameSite=Strict cookie, and every other request without it, or with another `Hos
 ## Build and run
 
 ```bash
-go build -trimpath -ldflags "-H windowsgui" -o acme-cms.exe .
+go build -trimpath -ldflags "-H windowsgui" -o generic-company-cms.exe .
 ```
 
 ```bash
-acme-cms.exe
+generic-company-cms.exe
 ```
 
 `go run . -serve` serves the same pages without a window on `http://127.0.0.1:8720/` (`-addr` changes
@@ -33,17 +33,17 @@ build machine's paths out of the exe.
 ## Install
 
 ```bash
-acme-cms.exe -install
+generic-company-cms.exe -install
 ```
 
 Installs for the current user (no admin rights): copies the exe to
-`%LOCALAPPDATA%\Programs\ACME Inc\ACME Journal\`, adds **ACME Inc → ACME Journal** to the Start menu
-(`-desktop-shortcut` for the desktop too) and lists it in **Apps & features**. `acme-cms.exe -uninstall`
+`%LOCALAPPDATA%\Programs\Generic Company Inc\Generic Company Journal\`, adds **Generic Company Inc → Generic Company Journal** to the Start menu
+(`-desktop-shortcut` for the desktop too) and lists it in **Apps & features**. `generic-company-cms.exe -uninstall`
 (or Apps & features) removes it again; the database is never deleted (`-purge` also removes the CMS's
 own settings and WebView2 profile). `-root DIR` does it all inside DIR instead. Other flags: `-version`,
 `-quiet`, `-smoke FILE`.
 
-`wizard-maker.exe build setup.json` (ACME Wizard Maker) makes the setup, `dist\ACME Journal-0.2.0-setup.exe`.
+`wizard-maker.exe build setup.json` (Generic Company Wizard Maker) makes the setup, `dist\Generic Company Journal-0.2.0-setup.exe`.
 
 | Path | What |
 |---|---|

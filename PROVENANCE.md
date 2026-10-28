@@ -13,7 +13,7 @@ comments keep close to the original wording.
 
 ### `go.mod` (new)
 
-`module acme/cms`, `go 1.24`, no `require` lines. Go 1.22 or later is
+`module generic-company/cms`, `go 1.24`, no `require` lines. Go 1.22 or later is
 needed for the method-and-path patterns and `r.PathValue` in `main.go`.
 
 (Superseded in 0.2.0: `main.go` is the desktop CMS. It builds without cgo, using the pure-Go
@@ -29,7 +29,7 @@ needed for the method-and-path patterns and `r.PathValue` in `main.go`.
 - Test source `47897C7BD2F5ADA950479A93C9C1FB60EF2C2912DB8DBDA7CF51457F95B3B1DD`:
   the four self-contained tests (tokenize, smoothed IDF, cosine, centroid),
   with new fixture words. The other five were rewritten over a fixture of
-  ACME Inc. posts. The determinism, tie-order, combining-mark and
+  Generic Company Inc. posts. The determinism, tie-order, combining-mark and
   link-card tests are new.
 - Changes:
   - `corpusDoc` became the exported `Doc{Name, Text}`, `index` became

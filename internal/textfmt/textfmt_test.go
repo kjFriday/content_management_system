@@ -1,4 +1,13 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
+// Project: content_management_system | File: internal/textfmt/textfmt_test.go
+// About: ==== Generic Company Inc. portfolio ===============================================...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// ==== Generic Company Inc. portfolio ===============================================
 // Project: content_management_system | File: internal/textfmt/textfmt_test.go
 // About: Tests for package textfmt.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
@@ -117,7 +126,7 @@ func TestWrap(t *testing.T) {
 
 // Every line fits the width unless it is a single word that cannot.
 func TestWrapRespectsWidth(t *testing.T) {
-	text := "ACME Inc. publishes product news, release notes and quarterly results on this blog every week."
+	text := "Generic Company Inc. publishes product news, release notes and quarterly results on this blog every week."
 	for width := 1; width <= 40; width++ {
 		for _, line := range Wrap(text, width) {
 			if utf8.RuneCountInString(line) > width && strings.Contains(line, " ") {
@@ -150,4 +159,4 @@ func TestPadRight(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=8d8eb60bfffe4f9548cbfa1a237b7cce0c4f242dbc23006511de8449aff8871a ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=2d4892e16a6e5bd5a6149e70a33ca66096d20e11e389f7c14d5b06f5f97463db ====

@@ -1,18 +1,27 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
 // Project: content_management_system | File: internal/install/install.go
-// About: Package install installs or uninstalls an ACME program for the current user (no admin...
+// About: ==== Generic Company Inc. portfolio ===============================================...
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
-// Package install installs or uninstalls an ACME program for the current user (no admin rights).
+// ==== Generic Company Inc. portfolio ===============================================
+// Project: content_management_system | File: internal/install/install.go
+// About: Package install installs or uninstalls an Generic Company program for the current user (no admin...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// Package install installs or uninstalls an Generic Company program for the current user (no admin rights).
 //
-// Install copies the exe and its icon to %LOCALAPPDATA%\Programs\ACME Inc\<name>\ with an install.json
+// Install copies the exe and its icon to %LOCALAPPDATA%\Programs\Generic Company Inc\<name>\ with an install.json
 // marker, adds a Start-menu shortcut (optionally a desktop one) and an uninstall entry under
 // HKCU\...\CurrentVersion\Uninstall\<app id>, so it shows in Apps & features. Uninstall removes all
-// three and never touches the shared database. An install that a setup made by ACME Wizard Maker left
+// three and never touches the shared database. An install that a setup made by Generic Company Wizard Maker left
 // (its marker names the installer), here or in the folder its uninstall entry names, is removed by its
 // own uninstall.exe instead, which keeps the files changed since: see Located and Wizard.
 //
@@ -37,7 +46,7 @@ import (
 const (
 	UninstallKey = `HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall`
 	Marker       = "install.json"
-	// WizardUninstaller is what a setup made by ACME Wizard Maker leaves in the install folder.
+	// WizardUninstaller is what a setup made by Generic Company Wizard Maker leaves in the install folder.
 	WizardUninstaller = "uninstall.exe"
 	// Cancelled is that uninstaller's exit code when the user cancels it in its window.
 	Cancelled = 3
@@ -47,7 +56,7 @@ const (
 type Program struct {
 	AppID, Name, Version, Publisher string
 	Exe                             string // the running exe, copied as-is
-	ExeName                         string // its name once installed, e.g. acme-cms.exe
+	ExeName                         string // its name once installed, e.g. generic-company-cms.exe
 	Icon                            []byte // app.ico, written beside the exe
 }
 
@@ -80,7 +89,7 @@ type Plan struct {
 func Locations(env func(string) string, root string) (programs, startMenu, desktop, registry string) {
 	if root != "" {
 		root, _ = filepath.Abs(root)
-		return filepath.Join(root, "Programs", "ACME Inc"), filepath.Join(root, "Start Menu", "ACME Inc"),
+		return filepath.Join(root, "Programs", "Generic Company Inc"), filepath.Join(root, "Start Menu", "Generic Company Inc"),
 			filepath.Join(root, "Desktop"), filepath.Join(root, "registry.json")
 	}
 	home, _ := os.UserHomeDir()
@@ -92,8 +101,8 @@ func Locations(env func(string) string, root string) (programs, startMenu, deskt
 	}
 	local := or("LOCALAPPDATA", filepath.Join(home, "AppData", "Local"))
 	roaming := or("APPDATA", filepath.Join(home, "AppData", "Roaming"))
-	return filepath.Join(local, "Programs", "ACME Inc"),
-		filepath.Join(roaming, "Microsoft", "Windows", "Start Menu", "Programs", "ACME Inc"),
+	return filepath.Join(local, "Programs", "Generic Company Inc"),
+		filepath.Join(roaming, "Microsoft", "Windows", "Start Menu", "Programs", "Generic Company Inc"),
 		filepath.Join(or("USERPROFILE", home), "Desktop"), ""
 }
 
@@ -217,7 +226,7 @@ type marker struct {
 	Version   string   `json:"version"`
 	Files     []string `json:"files"`
 	Shortcuts []string `json:"shortcuts"`
-	Installer string   `json:"installer,omitempty"` // written by ACME Wizard Maker setups, with a sha256 map
+	Installer string   `json:"installer,omitempty"` // written by Generic Company Wizard Maker setups, with a sha256 map
 }
 
 func readMarker(dir string) (marker, bool) {
@@ -358,7 +367,7 @@ func Uninstall(p Plan, run Runner, running string, purge string) (removed bool, 
 	return true, "", os.RemoveAll(p.InstallDir)
 }
 
-// Wizard is the uninstaller of an install that a setup made by ACME Wizard Maker left in p.InstallDir
+// Wizard is the uninstaller of an install that a setup made by Generic Company Wizard Maker left in p.InstallDir
 // (its marker names this program and an installer), or "" for this program's own install. Such an
 // install is removed by that uninstaller, which takes away only the files still as installed.
 func Wizard(p Plan) string {
@@ -386,7 +395,7 @@ func InstallLocation(p Plan, read Reader) (string, error) {
 }
 
 // Located is p aimed at the install its uninstall entry names when that lies outside p.InstallDir: a
-// setup made by ACME Wizard Maker installs where the user picks. Only such an install (see Wizard) is
+// setup made by Generic Company Wizard Maker installs where the user picks. Only such an install (see Wizard) is
 // handed on; any other folder still there is refused, so its entry and shortcuts are never cleared.
 func Located(p Plan, read Reader) (Plan, error) {
 	loc, err := InstallLocation(p, read)
@@ -475,4 +484,4 @@ func DeleteAfterExit(dir string) error {
 	return cmd.Start()
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=ac38dbe4ff33755674987bb701207657fa82830b33357c77b413febcee272ac3 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=b5e16fc2b8b8859aea12f20c9e06fbc45c6fc192ab6725bbbc417dceafb2f953 ====

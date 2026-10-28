@@ -1,4 +1,13 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
+// Project: content_management_system | File: internal/app/app_test.go
+// About: ==== Generic Company Inc. portfolio ===============================================...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// ==== Generic Company Inc. portfolio ===============================================
 // Project: content_management_system | File: internal/app/app_test.go
 // About: Tests for package app.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
@@ -28,10 +37,10 @@ func fakeEnv(dir string, extra map[string]string) Env {
 func TestDefaultIsShared(t *testing.T) {
 	dir := t.TempDir()
 	env := fakeEnv(dir, nil)
-	if got, want := ResolveDB("", env), filepath.Join(dir, "ACME Inc", "acme.db"); got != want {
+	if got, want := ResolveDB("", env), filepath.Join(dir, "Generic Company Inc", "generic_company.db"); got != want {
 		t.Fatalf("default = %q, want %q", got, want)
 	}
-	if got := DataDir(env); got != filepath.Join(dir, "ACME Inc", "ACME.CMS") {
+	if got := DataDir(env); got != filepath.Join(dir, "Generic Company Inc", "GenericCompany.CMS") {
 		t.Fatalf("data dir = %q", got)
 	}
 }
@@ -50,7 +59,7 @@ func TestPrecedence(t *testing.T) {
 		{"", "   ", "saved.db"},
 	}
 	for _, c := range cases {
-		extra["ACME_DB"] = c.envDB
+		extra["GENERIC_COMPANY_DB"] = c.envDB
 		if got := ResolveDB(c.flag, env); !strings.HasSuffix(got, c.want) {
 			t.Errorf("flag %q env %q -> %q, want *%s", c.flag, c.envDB, got, c.want)
 		}
@@ -84,4 +93,4 @@ func TestTitleCarriesTheVersion(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=e5a8d1663ff130815f62bfef21b4a35361fb869f6b5b19cf2990dde7c4fc4b08 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=eb425b9c216d095bfa65920430ed0bb291dd27774fa60874d6713b8a9263fea8 ====

@@ -1,4 +1,13 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
+// Project: content_management_system | File: internal/related/related_test.go
+// About: ==== Generic Company Inc. portfolio ===============================================...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// ==== Generic Company Inc. portfolio ===============================================
 // Project: content_management_system | File: internal/related/related_test.go
 // About: Tests for package related.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
@@ -16,9 +25,9 @@ import (
 	"testing"
 )
 
-// posts is a small fixture of ACME Inc. blog posts, keyed by slug.
+// posts is a small fixture of Generic Company Inc. blog posts, keyed by slug.
 var posts = []Doc{
-	{Name: "orbit-dashboard-launch", Text: "ACME Inc. launches Orbit, a dashboard for live sales reports. Orbit charts revenue by region and updates every minute."},
+	{Name: "orbit-dashboard-launch", Text: "Generic Company Inc. launches Orbit, a dashboard for live sales reports. Orbit charts revenue by region and updates every minute."},
 	{Name: "orbit-dashboard-tips", Text: "Five tips for the Orbit dashboard: filter sales reports by region, pin revenue charts, and share links with your team."},
 	{Name: "q3-revenue-results", Text: "Third quarter revenue grew 12 percent. Sales in every region beat the forecast."},
 	{Name: "hybrid-work-policy", Text: "The updated hybrid work policy sets core office hours, an equipment stipend and travel rules."},
@@ -376,4 +385,4 @@ func TestBodyText(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=ffd335d2309beea12c93eba63f41ef88ea43f3803a8ad5931b762a6c98f6f4f1 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=e410364adb0f1d93ba4fa0b9b16e8f9a4290a9c4bf25a6995fd199191c51ad70 ====

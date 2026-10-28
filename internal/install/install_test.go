@@ -1,4 +1,13 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
+// Project: content_management_system | File: internal/install/install_test.go
+// About: ==== Generic Company Inc. portfolio ===============================================...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// ==== Generic Company Inc. portfolio ===============================================
 // Project: content_management_system | File: internal/install/install_test.go
 // About: Tests for package install.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
@@ -25,11 +34,11 @@ func (r *recorder) run(s string) error { r.scripts = append(r.scripts, s); retur
 func setup(t *testing.T) (Program, string) {
 	t.Helper()
 	dir := t.TempDir()
-	exe := filepath.Join(dir, "build", "acme-test.exe")
+	exe := filepath.Join(dir, "build", "generic-company-test.exe")
 	os.MkdirAll(filepath.Dir(exe), 0o755)
 	os.WriteFile(exe, []byte("MZ fake exe"), 0o755)
-	return Program{AppID: "ACME.Test", Name: "ACME Test App", Version: "0.2.0", Publisher: "ACME Inc. (fictional)",
-		Exe: exe, ExeName: "acme-test.exe", Icon: []byte{0, 0, 1, 0}}, filepath.Join(dir, "sandbox")
+	return Program{AppID: "GenericCompany.Test", Name: "Generic Company Test App", Version: "0.2.0", Publisher: "Generic Company Inc. (fictional)",
+		Exe: exe, ExeName: "generic-company-test.exe", Icon: []byte{0, 0, 1, 0}}, filepath.Join(dir, "sandbox")
 }
 
 var day = time.Date(2026, 10, 17, 0, 0, 0, 0, time.UTC)
@@ -48,7 +57,7 @@ func value(p Plan, name string) Value {
 func TestPlan(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, true, 4096, day)
-	if p.InstallDir != filepath.Join(root, "Programs", "ACME Inc", "ACME Test App") {
+	if p.InstallDir != filepath.Join(root, "Programs", "Generic Company Inc", "Generic Company Test App") {
 		t.Fatalf("install dir %q", p.InstallDir)
 	}
 	if len(p.Shortcuts) != 2 || p.Shortcuts[0].Target != p.ExeTarget || !strings.HasSuffix(p.Shortcuts[0].Icon, "app.ico") {
@@ -69,7 +78,7 @@ func TestPlan(t *testing.T) {
 	if u := value(p, "UninstallString").Text; !strings.Contains(u, " -uninstall -root ") {
 		t.Fatalf("uninstall %q", u)
 	}
-	if p.RegistryKey != UninstallKey+`\ACME.Test` {
+	if p.RegistryKey != UninstallKey+`\GenericCompany.Test` {
 		t.Fatalf("key %q", p.RegistryKey)
 	}
 }
@@ -77,7 +86,7 @@ func TestPlan(t *testing.T) {
 func TestRealLocations(t *testing.T) {
 	env := map[string]string{"LOCALAPPDATA": `C:\L`, "APPDATA": `C:\R`, "USERPROFILE": `C:\U`}
 	programs, start, _, reg := Locations(func(k string) string { return env[k] }, "")
-	if programs != `C:\L\Programs\ACME Inc` || start != `C:\R\Microsoft\Windows\Start Menu\Programs\ACME Inc` || reg != "" {
+	if programs != `C:\L\Programs\Generic Company Inc` || start != `C:\R\Microsoft\Windows\Start Menu\Programs\Generic Company Inc` || reg != "" {
 		t.Fatalf("%q %q %q", programs, start, reg)
 	}
 }
@@ -88,10 +97,10 @@ func TestScriptQuotingAndRegistry(t *testing.T) {
 	p := MakePlan(prog, func(k string) string { return env[k] }, "", false, 1, day)
 	s := Script(p, false)
 	for _, want := range []string{
-		`'C:\O''Brien\Programs\ACME Inc\ACME Test App\app.ico,0'`,
+		`'C:\O''Brien\Programs\Generic Company Inc\Generic Company Test App\app.ico,0'`,
 		`-Name 'NoModify' -Value '1' -PropertyType DWord`,
 		`-Name 'DisplayVersion' -Value '0.2.0' -PropertyType String`,
-		`New-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\ACME.Test' -Force`,
+		`New-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\GenericCompany.Test' -Force`,
 	} {
 		if !strings.Contains(s, want) {
 			t.Errorf("script lacks %s", want)
@@ -115,7 +124,7 @@ func TestRoundTrip(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, true, 1, day)
 	rec := &recorder{}
-	db := filepath.Join(root, "acme.db")
+	db := filepath.Join(root, "generic_company.db")
 	os.MkdirAll(root, 0o755)
 	os.WriteFile(db, nil, 0o644)
 	if err := Install(p, rec.run); err != nil {
@@ -163,7 +172,7 @@ func TestRunningFromInstallDirDeletesLater(t *testing.T) {
 		t.Fatalf("%v %v %q", removed, err, later)
 	}
 	entries, _ := os.ReadDir(p.InstallDir)
-	if len(entries) != 1 || entries[0].Name() != "acme-test.exe" {
+	if len(entries) != 1 || entries[0].Name() != "generic-company-test.exe" {
 		t.Fatalf("left: %v", entries)
 	}
 }
@@ -176,7 +185,7 @@ func TestGuardRefusesForeignFolder(t *testing.T) {
 	if _, _, err := Uninstall(p, (&recorder{}).run, prog.Exe, ""); err == nil {
 		t.Fatal("removed a folder without a marker")
 	}
-	os.WriteFile(filepath.Join(p.InstallDir, Marker), []byte(`{"app_id":"ACME.Other"}`), 0o644)
+	os.WriteFile(filepath.Join(p.InstallDir, Marker), []byte(`{"app_id":"GenericCompany.Other"}`), 0o644)
 	if err := Install(p, (&recorder{}).run); err == nil {
 		t.Fatal("installed over another program")
 	}
@@ -205,17 +214,17 @@ func TestRealShortcutInSandbox(t *testing.T) {
 	}
 }
 
-// wizardInstall lays out what a setup made by ACME Wizard Maker leaves: its files, uninstall.exe and a
+// wizardInstall lays out what a setup made by Generic Company Wizard Maker leaves: its files, uninstall.exe and a
 // marker with sha256 and installer, then changes notes.txt as a user would.
 func wizardInstall(t *testing.T, p Plan, appID string) {
 	t.Helper()
 	os.MkdirAll(p.InstallDir, 0o755)
-	files := []string{"acme-test.exe", "notes.txt", "app.ico", WizardUninstaller}
+	files := []string{"generic-company-test.exe", "notes.txt", "app.ico", WizardUninstaller}
 	for _, f := range files {
 		os.WriteFile(filepath.Join(p.InstallDir, f), []byte("as installed"), 0o644)
 	}
 	b, _ := json.Marshal(map[string]any{"app_id": appID, "name": p.Name, "version": p.Version, "files": files,
-		"shortcuts": []string{}, "sha256": map[string]string{"notes.txt": "e3b0"}, "installer": "ACME Wizard Maker 0.1.0"})
+		"shortcuts": []string{}, "sha256": map[string]string{"notes.txt": "e3b0"}, "installer": "Generic Company Wizard Maker 0.1.0"})
 	os.WriteFile(filepath.Join(p.InstallDir, Marker), b, 0o644)
 	os.WriteFile(filepath.Join(p.InstallDir, "notes.txt"), []byte("changed by the user"), 0o644)
 }
@@ -230,11 +239,11 @@ func TestWizardInstallIsTheUninstallersToRemove(t *testing.T) {
 	if Wizard(p) != "" {
 		t.Fatal("the program's own install is not wizard-made")
 	}
-	wizardInstall(t, p, "ACME.Other")
+	wizardInstall(t, p, "GenericCompany.Other")
 	if Wizard(p) != "" {
 		t.Fatal("another program's uninstaller would run")
 	}
-	wizardInstall(t, p, "ACME.Test")
+	wizardInstall(t, p, "GenericCompany.Test")
 	if Wizard(p) != filepath.Join(p.InstallDir, "uninstall.exe") {
 		t.Fatalf("uninstaller %q", Wizard(p))
 	}
@@ -253,11 +262,11 @@ func TestUninstallArgs(t *testing.T) {
 func TestRunUninstallerKeepsChangedFiles(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, false, 1, day)
-	wizardInstall(t, p, "ACME.Test")
+	wizardInstall(t, p, "GenericCompany.Test")
 	var got []string
 	fake := func(exe string, args []string) (int, string, error) {
 		got = append([]string{exe}, args...)
-		return 4, "Setup or uninstall of ACME Test App is already running.", nil
+		return 4, "Setup or uninstall of Generic Company Test App is already running.", nil
 	}
 	code, said, err := RunUninstaller(p, prog.Exe, UninstallArgs(true, false, root), fake)
 	if err != nil || code != 4 || !strings.Contains(said, "already running") {
@@ -279,7 +288,7 @@ func TestRunUninstallerKeepsChangedFiles(t *testing.T) {
 func TestRunUninstallerRefusesFromTheFolderItRemoves(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, false, 1, day)
-	wizardInstall(t, p, "ACME.Test")
+	wizardInstall(t, p, "GenericCompany.Test")
 	ran := false
 	fake := func(string, []string) (int, string, error) { ran = true; return 0, "", nil }
 	if _, _, err := RunUninstaller(p, strings.ToUpper(p.ExeTarget), nil, fake); err == nil || ran {
@@ -311,7 +320,7 @@ func TestLocatedFindsAWizardInstallElsewhere(t *testing.T) {
 	if got, err := Located(p, none); err != nil || got.InstallDir != p.InstallDir {
 		t.Fatalf("a stale entry: %q %v", got.InstallDir, err)
 	}
-	wizardInstall(t, elsewhere, "ACME.Test")
+	wizardInstall(t, elsewhere, "GenericCompany.Test")
 	got, err := Located(p, none)
 	if err != nil || got.InstallDir != elsewhere.InstallDir || Wizard(got) != filepath.Join(elsewhere.InstallDir, "uninstall.exe") {
 		t.Fatalf("%q %v", got.InstallDir, err)
@@ -333,7 +342,7 @@ func TestLocatedNeverClearsAnInstallElsewhere(t *testing.T) {
 	elsewhere.InstallDir = filepath.Join(root, "Apps", "Journal")
 	entry(t, p, elsewhere.InstallDir)
 	none := func(string) (string, error) { return "", nil }
-	for _, id := range []string{"ACME.Other", ""} {
+	for _, id := range []string{"GenericCompany.Other", ""} {
 		wizardInstall(t, elsewhere, id)
 		if id == "" {
 			os.Remove(filepath.Join(elsewhere.InstallDir, Marker))
@@ -353,12 +362,12 @@ func TestLocatedReadsTheRealRegistry(t *testing.T) {
 	dir := filepath.Join(root, "Apps", "Journal")
 	var script string
 	read := func(s string) (string, error) { script = s; return dir, nil }
-	wizardInstall(t, Plan{InstallDir: dir, Name: p.Name, Version: p.Version}, "ACME.Test")
+	wizardInstall(t, Plan{InstallDir: dir, Name: p.Name, Version: p.Version}, "GenericCompany.Test")
 	got, err := Located(p, read)
 	if err != nil || got.InstallDir != dir {
 		t.Fatalf("%q %v", got.InstallDir, err)
 	}
-	if !strings.Contains(script, `Get-ItemProperty -LiteralPath 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\ACME.Test' -Name InstallLocation`) {
+	if !strings.Contains(script, `Get-ItemProperty -LiteralPath 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\GenericCompany.Test' -Name InstallLocation`) {
 		t.Fatalf("script %s", script)
 	}
 	if _, err := Located(p, func(string) (string, error) { return "", os.ErrPermission }); err == nil {
@@ -378,7 +387,7 @@ func TestPowerShellOutput(t *testing.T) {
 	}
 	prog, _ := setup(t)
 	p := MakePlan(prog, noEnv, "", false, 1, day)
-	p.RegistryKey = UninstallKey + `\ACME.NoSuchProgram.Test`
+	p.RegistryKey = UninstallKey + `\GenericCompany.NoSuchProgram.Test`
 	if loc, err := InstallLocation(p, PowerShellOutput); err != nil || loc != "" {
 		t.Fatalf("%q %v", loc, err)
 	}
@@ -394,4 +403,4 @@ func TestRunAndWaitReturnsTheExitCode(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=5812ab5d463a217dcbb4850dc60c219a69eaf334efee0f4b0afac7d312d22229 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=5f0fd26105a0244a008dc2f7c45463c15f97b85a3a3d4c7336b37d4f9f528d8e ====

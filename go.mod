@@ -1,4 +1,4 @@
-module acme/cms
+module generic-company/cms
 
 go 1.24.0
 

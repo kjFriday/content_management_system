@@ -1,4 +1,13 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
+// Project: content_management_system | File: icon_test.go
+// About: ==== Generic Company Inc. portfolio ===============================================...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// ==== Generic Company Inc. portfolio ===============================================
 // Project: content_management_system | File: icon_test.go
 // About: Tests for package main.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
@@ -71,4 +80,4 @@ func TestPixelExactAndCredited(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=178aae8426b24cc988b22b3badea47e73ad6afd12011d39c9f3fb2ab177eabe8 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=576a12a856ff954f3571b16235a24e1bd2b98b94327d84f2854a9ba077d107a6 ====

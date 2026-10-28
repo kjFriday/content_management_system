@@ -1,4 +1,13 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
+// Project: content_management_system | File: internal/db/db_test.go
+// About: ==== Generic Company Inc. portfolio ===============================================...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// ==== Generic Company Inc. portfolio ===============================================
 // Project: content_management_system | File: internal/db/db_test.go
 // About: Tests for package db.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
@@ -17,14 +26,14 @@ import (
 	"testing"
 )
 
-// mockDB builds acme.db from the hub's schema (mock/schema.sql) and the mock employees.
+// mockDB builds generic_company.db from the hub's schema (mock/schema.sql) and the mock employees.
 func mockDB(t *testing.T) string {
 	t.Helper()
 	schema, err := os.ReadFile("../../mock/schema.sql")
 	if err != nil {
 		t.Skip("no mock/schema.sql:", err)
 	}
-	path := filepath.Join(t.TempDir(), "acme.db")
+	path := filepath.Join(t.TempDir(), "generic_company.db")
 	conn, err := sql.Open("sqlite", path)
 	if err != nil {
 		t.Fatal(err)
@@ -83,4 +92,4 @@ func TestSchemaCheck(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=1825125b99e9de29eaeb45717847c974847b32652527b275a0ee9e9982f94b9c ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=d76f7036aadf90ee02d4ad972580c3f86b6332158d69c3714a42baebcaecbb6d ====

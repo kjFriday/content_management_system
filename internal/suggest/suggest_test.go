@@ -1,4 +1,13 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
+// Project: content_management_system | File: internal/suggest/suggest_test.go
+// About: ==== Generic Company Inc. portfolio ===============================================...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// ==== Generic Company Inc. portfolio ===============================================
 // Project: content_management_system | File: internal/suggest/suggest_test.go
 // About: Tests for package suggest.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
@@ -36,7 +45,7 @@ func TestEditDistance(t *testing.T) {
 	}
 }
 
-// slugs is a fixture of ACME Inc. CMS post and page slugs.
+// slugs is a fixture of Generic Company Inc. CMS post and page slugs.
 var slugs = []string{
 	"about",
 	"blog",
@@ -113,4 +122,4 @@ func TestSuggestCountsRunes(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=dd50cdec4d2705d44a687ddd33df54cd5c4b39c6a9ae0b3c2e0c5d0836513144 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=9c4ea74b3a679de4a077c506515622d98b1bf120db68525a2c72e1bd5911adb2 ====

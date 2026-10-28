@@ -1,16 +1,25 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
 // Project: content_management_system | File: main.go
-// About: Command acme-cms is ACME Journal, ACME Inc.'s posts: a desktop window over a small set of...
+// About: ==== Generic Company Inc. portfolio ===============================================...
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
-// Command acme-cms is ACME Journal, ACME Inc.'s posts: a desktop window over a small set of pages
+// ==== Generic Company Inc. portfolio ===============================================
+// Project: content_management_system | File: main.go
+// About: Command generic-company-cms is Generic Company Journal, Generic Company Inc.'s posts: a desktop window over a small set of...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// Command generic-company-cms is Generic Company Journal, Generic Company Inc.'s posts: a desktop window over a small set of pages
 // and a read-only JSON API, served in-process to that window only.
 //
-// Posts come from the embedded snapshot (the CMS owns them); post authors come from the shared ACME
+// Posts come from the embedded snapshot (the CMS owns them); post authors come from the shared Generic Company
 // database's employees table, opened read-only by path, or from the snapshot when there is no database.
 // See cli.go for the flags (-install, -uninstall, -serve, ...).
 package main
@@ -26,11 +35,11 @@ import (
 	"sync"
 	"time"
 
-	"acme/cms/internal/app"
-	"acme/cms/internal/db"
-	"acme/cms/internal/health"
-	"acme/cms/internal/store"
-	"acme/cms/internal/textfmt"
+	"generic-company/cms/internal/app"
+	"generic-company/cms/internal/db"
+	"generic-company/cms/internal/health"
+	"generic-company/cms/internal/store"
+	"generic-company/cms/internal/textfmt"
 )
 
 //go:embed mock/posts.json mock/employees.json
@@ -237,7 +246,7 @@ func render(w http.ResponseWriter, code int, t *template.Template, data any) {
 }
 
 const layout = `{{define "top"}}<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>ACME Inc. Journal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Generic Company Inc. Journal</title>
 <link rel="icon" href="/favicon.ico">
 <style>
 body{margin:0;font:16px/1.55 system-ui,sans-serif;color:#1d2330;background:#f6f7f9}
@@ -251,7 +260,7 @@ input{font:inherit;padding:4px 8px;border:1px solid #c3c8d0;border-radius:6px}
 .wide{width:100%;box-sizing:border-box}.error{color:#b42318}
 footer{color:#667085;font-size:12px}
 @media (prefers-color-scheme:dark){body{color:#e6e8ec;background:#14171c}a{color:#8fb0ff}.card{background:#1d2128!important;border-color:#2e343e!important}}
-</style></head><body><header><h1><img class="px" src="/icon-32.png" width="32" height="32" alt=""><a href="/">ACME Inc. Journal</a></h1>
+</style></head><body><header><h1><img class="px" src="/icon-32.png" width="32" height="32" alt=""><a href="/">Generic Company Inc. Journal</a></h1>
 <form action="/"><input name="q" type="search" value="{{.Q}}" placeholder="Search posts"></form><a href="/about">About</a></header><main>{{end}}
 {{define "bottom"}}</main><footer>{{.Name}} {{.Version}} · Fictional company; text is lorem ipsum. Authors from {{.Source}}.</footer></body></html>{{end}}`
 
@@ -279,4 +288,4 @@ var (
 {{template "bottom" .}}`))
 )
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=4aee295492da343464e9a64c449397297d8c8cfc910687f765da6b021aeb7e55 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=e3cb0091c9bd2b30ad1148d51e9a2855612c1b4799154b0bffaa071bd40c38ce ====

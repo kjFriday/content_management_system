@@ -1,4 +1,13 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
+// Project: content_management_system | File: internal/store/store_test.go
+// About: ==== Generic Company Inc. portfolio ===============================================...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// ==== Generic Company Inc. portfolio ===============================================
 // Project: content_management_system | File: internal/store/store_test.go
 // About: Tests for package store.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
@@ -36,7 +45,7 @@ func TestPublishedIsNewestFirstWithoutDrafts(t *testing.T) {
 	if len(got) != 2 || got[0].Slug != "tempor-incididunt-2" {
 		t.Fatalf("published = %+v", got)
 	}
-	if got[1].Author != "Maria Garcia" || got[0].Author != "ACME Inc." {
+	if got[1].Author != "Maria Garcia" || got[0].Author != "Generic Company Inc." {
 		t.Fatalf("authors = %q, %q", got[1].Author, got[0].Author)
 	}
 	if !strings.HasPrefix(got[1].Excerpt, "lorem ipsum") || strings.Contains(got[1].Excerpt, "paragraph") {
@@ -84,7 +93,7 @@ func TestFromMockSnapshot(t *testing.T) {
 		t.Fatalf("counts = %v", c)
 	}
 	for _, p := range s.Published() {
-		if p.Author == "ACME Inc." {
+		if p.Author == "Generic Company Inc." {
 			t.Fatalf("post %s has no known author", p.Slug)
 		}
 	}
@@ -100,4 +109,4 @@ func TestFromAuthorsKeepsSnapshotPosts(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=c36cf34a2af3f3957fbecef2a319ae529b8a01eeb76b33b57e02686893311fcc ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=de643be3236a3d594c15da6d7f398d4a18a8e31247afae1baefd41006e3554b0 ====

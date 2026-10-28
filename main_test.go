@@ -1,4 +1,13 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
+// Project: content_management_system | File: main_test.go
+// About: ==== Generic Company Inc. portfolio ===============================================...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// ==== Generic Company Inc. portfolio ===============================================
 // Project: content_management_system | File: main_test.go
 // About: Tests for package main.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
@@ -20,7 +29,7 @@ import (
 	"testing"
 	"time"
 
-	"acme/cms/internal/store"
+	"generic-company/cms/internal/store"
 )
 
 func server(t *testing.T) (*httptest.Server, *store.Store) {
@@ -114,4 +123,4 @@ func TestIconsAndAboutPage(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=fc6b419cbc3f83d0d1f122926fbf8d939212a87ecf8d7f9db159bb5f9165e8c3 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=06b593378a6ba60ab3a746e90390641851473ec3ada3e41c0ecc1fd74d60109a ====

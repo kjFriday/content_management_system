@@ -1,4 +1,13 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
+// Project: content_management_system | File: internal/health/health.go
+// About: ==== Generic Company Inc. portfolio ===============================================...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// ==== Generic Company Inc. portfolio ===============================================
 // Project: content_management_system | File: internal/health/health.go
 // About: Package health reports basic Go runtime statistics for a service health endpoint such as...
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
@@ -65,4 +74,4 @@ func Handler(start time.Time) http.HandlerFunc {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=8511f54e0c3da3aa2cd366c8bd5eeebb75acf40f2dd4199846addc1ff7cf5c49 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=f0c5bead259754d156222db12e0280f834918f656940bbcac36b7e8d7b804aa3 ====

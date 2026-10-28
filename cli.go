@@ -1,4 +1,13 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
+// Project: content_management_system | File: cli.go
+// About: ==== Generic Company Inc. portfolio ===============================================...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// ==== Generic Company Inc. portfolio ===============================================
 // Project: content_management_system | File: cli.go
 // About: Part of package main in content_management_system.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
@@ -19,12 +28,12 @@ import (
 	"os"
 	"time"
 
-	"acme/cms/internal/app"
-	"acme/cms/internal/desktop"
-	"acme/cms/internal/install"
+	"generic-company/cms/internal/app"
+	"generic-company/cms/internal/desktop"
+	"generic-company/cms/internal/install"
 )
 
-const exeName = "acme-cms.exe"
+const exeName = "generic-company-cms.exe"
 
 type options struct {
 	db, addr, root, smoke              string
@@ -34,9 +43,9 @@ type options struct {
 
 func parse(args []string, out io.Writer) (options, error) {
 	var o options
-	fs := flag.NewFlagSet("acme-cms", flag.ContinueOnError)
+	fs := flag.NewFlagSet("generic-company-cms", flag.ContinueOnError)
 	fs.SetOutput(out)
-	fs.StringVar(&o.db, "db", "", `shared database (default: ACME_DB, the saved setting, or %LOCALAPPDATA%\ACME Inc\acme.db)`)
+	fs.StringVar(&o.db, "db", "", `shared database (default: GENERIC_COMPANY_DB, the saved setting, or %LOCALAPPDATA%\Generic Company Inc\generic_company.db)`)
 	fs.BoolVar(&o.mock, "mock", false, "authors from the embedded snapshot, not the database")
 	fs.BoolVar(&o.serve, "serve", false, "no window: serve the pages on -addr (for development)")
 	fs.StringVar(&o.addr, "addr", "127.0.0.1:8720", "with -serve: listen address")
@@ -86,7 +95,7 @@ func runInstaller(o options) (int, string, error) {
 			return 0, "", err
 		}
 		if install.Wizard(plan) != "" {
-			// a setup made by ACME Wizard Maker installed it: its uninstaller keeps the files changed since
+			// a setup made by Generic Company Wizard Maker installed it: its uninstaller keeps the files changed since
 			code, said, err := install.RunUninstaller(plan, prog.Exe, install.UninstallArgs(o.quiet, o.purge, o.root), install.RunAndWait)
 			switch {
 			case err != nil:
@@ -116,7 +125,7 @@ func runInstaller(o options) (int, string, error) {
 	if err := install.Install(plan, install.PowerShell); err != nil {
 		return 0, "", err
 	}
-	tell(o, fmt.Sprintf("%s %s installed in %s. Find it in the Start menu under ACME Inc.", app.Name, app.Version, plan.InstallDir))
+	tell(o, fmt.Sprintf("%s %s installed in %s. Find it in the Start menu under Generic Company Inc.", app.Name, app.Version, plan.InstallDir))
 	return 0, "", nil
 }
 
@@ -152,7 +161,7 @@ func main() {
 	opts := desktop.Options{Title: app.Title, Width: 1000, Height: 760, DataPath: app.DataDir(os.Getenv) + `\WebView2`, Handler: handler}
 	if o.smoke != "" {
 		seen := make(chan [2]any, 1)
-		opts.Bind = map[string]any{"acmeSmoke": func(title string, cards int) { seen <- [2]any{title, cards} }}
+		opts.Bind = map[string]any{"genericCompanySmoke": func(title string, cards int) { seen <- [2]any{title, cards} }}
 		opts.Ready = func(w desktop.Window) { go smoke(o.smoke, st, w, seen) }
 	}
 	if err := desktop.Run(opts); err != nil {
@@ -164,7 +173,7 @@ func main() {
 // smoke waits for the page to show posts, then writes the report and closes the window.
 func smoke(file string, st *site, w desktop.Window, seen chan [2]any) {
 	time.Sleep(2 * time.Second)
-	w.Eval("acmeSmoke(document.title, document.querySelectorAll('article').length)")
+	w.Eval("genericCompanySmoke(document.title, document.querySelectorAll('article').length)")
 	page := [2]any{"", 0}
 	select {
 	case page = <-seen:
@@ -182,4 +191,4 @@ func smoke(file string, st *site, w desktop.Window, seen chan [2]any) {
 	w.Close()
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=e1d5521c33a2573d43f5b2d47a4d06475d717b08ec85211368cd597f911838e2 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=375e05c700bbdbd2a936905f8773bdb7edf89801206c0af77bc389ccb4634816 ====

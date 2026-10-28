@@ -1,4 +1,13 @@
-// ==== ACME Inc. portfolio ===============================================
+// ==== Generic Company Inc. portfolio ====================================
+// Project: content_management_system | File: internal/store/store.go
+// About: ==== Generic Company Inc. portfolio ===============================================...
+// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
+// You may change this file under the AGPL-3.0. The stamp at the end marks
+// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// Reused code, if any, is mapped in PROVENANCE.md.
+// ========================================================================
+
+// ==== Generic Company Inc. portfolio ===============================================
 // Project: content_management_system | File: internal/store/store.go
 // About: Package store holds the CMS's posts in memory and answers the read API: published lists...
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
@@ -18,9 +27,9 @@ import (
 	"sort"
 	"strings"
 
-	"acme/cms/internal/related"
-	"acme/cms/internal/suggest"
-	"acme/cms/internal/textfmt"
+	"generic-company/cms/internal/related"
+	"generic-company/cms/internal/suggest"
+	"generic-company/cms/internal/textfmt"
 )
 
 // Post is one CMS post. Body is the editor's JSON block content, kept as-is.
@@ -35,7 +44,7 @@ type Post struct {
 	CreatedAt   string          `json:"created_at"`
 }
 
-// Author is an ACME Inc. employee (the hub's employees table).
+// Author is an Generic Company Inc. employee (the hub's employees table).
 type Author struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
@@ -107,12 +116,12 @@ func FromAuthors(fsys fs.FS, authors []Author, source string) (*Store, error) {
 	return New(posts, authors, source), nil
 }
 
-// Author returns the post's author name, or "ACME Inc." when the id is unknown.
+// Author returns the post's author name, or "Generic Company Inc." when the id is unknown.
 func (s *Store) Author(p Post) string {
 	if a, ok := s.authors[p.AuthorID]; ok {
 		return a.Name
 	}
-	return "ACME Inc."
+	return "Generic Company Inc."
 }
 
 func (s *Store) summary(i int) Summary {
@@ -204,4 +213,4 @@ func (s *Store) Counts() map[string]int {
 	return c
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=66351f72a4128cdb23f0fb3b773d5f8ab58897ed96eae1a44c73ad1d364a0fc9 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=c3e6cc816d7db5a99a8022e26106fcdecd45acbe6795da14266f78f20918ad11 ====
