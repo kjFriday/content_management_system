@@ -203,15 +203,18 @@ func smoke(file string, st *site, w desktop.Window, seen chan [2]any) {
 	case <-time.After(10 * time.Second):
 	}
 	s := st.get()
+	st.mu.RLock()
+	dbPath := st.dbPath
+	st.mu.RUnlock()
 	source := "mock"
 	if s.Source == "database" {
 		source = "db"
 	}
 	report := map[string]any{"app_id": app.ID, "version": app.Version, "title": app.Title, "icon_set": w.IconSet(),
-		"source": source, "db": st.dbPath, "counts": s.Counts(), "page_title": page[0], "cards": page[1]}
+		"source": source, "db": dbPath, "counts": s.Counts(), "page_title": page[0], "cards": page[1]}
 	b, _ := json.MarshalIndent(report, "", "  ")
 	os.WriteFile(file, b, 0o644)
 	w.Close()
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=44dd1f5a167ca2a7a5d59bfee3b95093ea12d9ec80c73380a850976d2a7479da ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=b6ccf00abb5e648e948f3afce025d84918ce9d97133c10bd767cc6e06290a741 ====

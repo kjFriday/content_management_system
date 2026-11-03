@@ -7,9 +7,10 @@
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
+// Off Windows there is no window: the program can still serve its pages with -serve or -public.
+
 //go:build !windows
 
-// Off Windows there is no window: the program can still serve its pages with -serve or -public.
 package desktop
 
 import "errors"
@@ -34,4 +35,4 @@ func Run(Options) error {
 // MessageBox does nothing off Windows; callers print the message as well.
 func MessageBox(title, text string) {}
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=ec22d293c34480c2c8f585438811c1a8a3e3f4b6eee900b8ebc52083efd5f1d9 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=c8256b96bc56b63838c6bcbb2e8f1d3eee92acc15000578fb298523289fd2150 ====

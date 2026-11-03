@@ -13,13 +13,15 @@ comments keep close to the original wording.
 
 ### `go.mod` (new)
 
-`module generic-company/cms`, `go 1.24`, no `require` lines. Go 1.22 or later is
+`module generic-company/cms`, `go 1.24.0`, `toolchain go1.24.2`. Go 1.22 or later is
 needed for the method-and-path patterns and `r.PathValue` in `main.go`.
 
-(Superseded in 0.2.0: `main.go` is the desktop CMS. It builds without cgo, using the pure-Go
-`modernc.org/sqlite` and `github.com/jchv/go-webview2`; the cgo design stays in `reference/`.)
+Since 0.2.0 package main (`cli.go`, `main.go`, `site.go`, `pages.go`) is the desktop CMS. It builds
+without cgo: `go.mod` requires the pure-Go `modernc.org/sqlite` (v1.46.1, the last release for
+Go 1.24) and `github.com/jchv/go-webview2`, with the modules they need. The cgo design stays in
+`reference/`.
 
-### `internal/related/related.go`, `related_test.go`
+### `internal/related/related.go`, `body.go`, `related_test.go`
 
 - Source `E2E1C5CCEAF971D6E0D84B632CFDF764136A288BF9D3A0AB4B4DD8834915EEE4`:
   `stopWords`, `tokenize`, `corpusDoc`, `vector`, `index`, `fit`,
@@ -49,11 +51,11 @@ needed for the method-and-path patterns and `r.PathValue` in `main.go`.
     original could differ in the last bit). `cosine` sums only the shared
     terms. `rank` uses a stable sort, so equal scores order by Name, then
     by position.
-  - New `BodyText` flattens a JSON block body (Editor.js, TipTap) into
-    text for indexing. The original had no equivalent. It skips structural
-    keys (including the Editor.js link-card and embed fields `link`,
-    `source`, `embed` and `service`) and any value that is a bare http,
-    https or mailto link.
+  - New `BodyText`, in `body.go` with its helpers, flattens a JSON block
+    body (Editor.js, TipTap) into text for indexing. The original had no
+    equivalent. It skips structural keys (including the Editor.js
+    link-card and embed fields `link`, `source`, `embed` and `service`)
+    and any value that is a bare http, https or mailto link.
 
 ### `internal/suggest/suggest.go`, `suggest_test.go`
 
@@ -113,4 +115,4 @@ needed for the method-and-path patterns and `r.PathValue` in `main.go`.
 
 | File | What |
 |---|---|
-| `internal/app`, `internal/install`, `internal/desktop`, `internal/db`, `cli.go` | Written for the desktop program; `internal/install` ports the CRUD hub's `installer.py` (same plan, PowerShell script and sandbox) to Go. |
+| `internal/app`, `internal/install`, `internal/desktop`, `internal/db`, `cli.go` | Written for the desktop program; `internal/install` ports the CRUD hub's `installer.py` (same plan, PowerShell script and sandbox) to Go. The Notify Hub (`company/notify_hub`) keeps twins of `internal/app`, `internal/desktop` and `internal/install`, file for file, that differ only in the app id and name: change both together. |
