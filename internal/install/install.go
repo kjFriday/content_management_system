@@ -1,15 +1,6 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: content_management_system | File: internal/install/install.go
-// About: ==== Generic Company Inc. portfolio ===============================================...
-// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
-// You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
-// Reused code, if any, is mapped in PROVENANCE.md.
-// ========================================================================
-
-// ==== Generic Company Inc. portfolio ===============================================
-// Project: content_management_system | File: internal/install/install.go
-// About: Package install installs or uninstalls an Generic Company program for the current user (no admin...
+// About: Package install installs or uninstalls an Generic Company program for the current user...
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
@@ -483,4 +474,4 @@ func DeleteAfterExit(dir string) error {
 	return cmd.Start()
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=d634d7b02d70735cf13c06198e1c96172b9e36962afd5c5c8d6485500fe14ae3 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=0ba7a1064867166caed498381bf4ff1395efb3f0e0e2d33a451a2483c0e697f4 ====

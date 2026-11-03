@@ -1,14 +1,5 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: content_management_system | File: internal/install/install_test.go
-// About: ==== Generic Company Inc. portfolio ===============================================...
-// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
-// You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
-// Reused code, if any, is mapped in PROVENANCE.md.
-// ========================================================================
-
-// ==== Generic Company Inc. portfolio ===============================================
-// Project: content_management_system | File: internal/install/install_test.go
 // About: Tests for package install.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
@@ -403,4 +394,4 @@ func TestRunAndWaitReturnsTheExitCode(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=5f0fd26105a0244a008dc2f7c45463c15f97b85a3a3d4c7336b37d4f9f528d8e ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=a69fc91fccf6f1ac94ec141eaec7676e63470adecc29c0ca8b4c3f2d4f418e40 ====

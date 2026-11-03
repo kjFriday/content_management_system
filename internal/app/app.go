@@ -1,14 +1,5 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: content_management_system | File: internal/app/app.go
-// About: ==== Generic Company Inc. portfolio ===============================================...
-// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
-// You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
-// Reused code, if any, is mapped in PROVENANCE.md.
-// ========================================================================
-
-// ==== Generic Company Inc. portfolio ===============================================
-// Project: content_management_system | File: internal/app/app.go
 // About: Package app is the CMS's identity (name, version, credit) and where it keeps its files.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
@@ -112,4 +103,4 @@ func ResolveDB(flag string, env Env) string {
 	return DefaultDB(env)
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=483da3574a5619e23a33491f080d52dafa0a411f418969ba67ce468a6c4fbdd7 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=d56ebb0c9a6188b82b5bfe89ff9a3fcf34d532e157f2196fd506d88d09dcd082 ====

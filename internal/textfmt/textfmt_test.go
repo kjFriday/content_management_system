@@ -1,14 +1,5 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: content_management_system | File: internal/textfmt/textfmt_test.go
-// About: ==== Generic Company Inc. portfolio ===============================================...
-// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
-// You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
-// Reused code, if any, is mapped in PROVENANCE.md.
-// ========================================================================
-
-// ==== Generic Company Inc. portfolio ===============================================
-// Project: content_management_system | File: internal/textfmt/textfmt_test.go
 // About: Tests for package textfmt.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
@@ -159,4 +150,4 @@ func TestPadRight(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=2d4892e16a6e5bd5a6149e70a33ca66096d20e11e389f7c14d5b06f5f97463db ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=967fef4685a3d09a271fdcb72ede896077f1efa1f755857f09ea456353661ae8 ====

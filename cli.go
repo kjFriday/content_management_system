@@ -1,14 +1,5 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: content_management_system | File: cli.go
-// About: ==== Generic Company Inc. portfolio ===============================================...
-// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
-// You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
-// Reused code, if any, is mapped in PROVENANCE.md.
-// ========================================================================
-
-// ==== Generic Company Inc. portfolio ===============================================
-// Project: content_management_system | File: cli.go
 // About: Part of package main in content_management_system.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
@@ -223,4 +214,4 @@ func smoke(file string, st *site, w desktop.Window, seen chan [2]any) {
 	w.Close()
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=817a7071a65b15f6171e350d0dd211cd4f433e026cd1086624c0a64f30538a96 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=fb5e38f615397b8ed362bbf58e222a8ba7eceefe23dc544160d01aee0aaba773 ====

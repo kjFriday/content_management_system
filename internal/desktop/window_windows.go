@@ -1,14 +1,5 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: content_management_system | File: internal/desktop/window_windows.go
-// About: ==== Generic Company Inc. portfolio ===============================================...
-// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
-// You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
-// Reused code, if any, is mapped in PROVENANCE.md.
-// ========================================================================
-
-// ==== Generic Company Inc. portfolio ===============================================
-// Project: content_management_system | File: internal/desktop/window_windows.go
 // About: Part of package desktop in content_management_system.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
@@ -94,4 +85,4 @@ func MessageBox(title, text string) {
 	syscall.NewLazyDLL("user32.dll").NewProc("MessageBoxW").Call(0, uintptr(unsafe.Pointer(m)), uintptr(unsafe.Pointer(t)), 0x40)
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=43eacc36e632ba26c8239daaf7e221f58752886d03299ba1d279bd4209a75303 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=50976b183ff66f2865015ba068e309420e0ca19626db5bd16157adc52d7584d1 ====

@@ -1,14 +1,5 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: content_management_system | File: internal/suggest/suggest.go
-// About: ==== Generic Company Inc. portfolio ===============================================...
-// Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
-// You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
-// Reused code, if any, is mapped in PROVENANCE.md.
-// ========================================================================
-
-// ==== Generic Company Inc. portfolio ===============================================
-// Project: content_management_system | File: internal/suggest/suggest.go
 // About: Package suggest offers a "did you mean" hint for a missed lookup, such as a 404 on an...
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
@@ -88,4 +79,4 @@ func Suggest(word string, vocab []string) (string, bool) {
 	return best, bestD >= 0
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=da2076951b78ebf13865156f408803403b7bca0b9f52bc22cc642e21cb89861a ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=8e7f75b29e397df50f8609ac9af6d1ca46cc01708824a1d5832aa0c840874594 ====
