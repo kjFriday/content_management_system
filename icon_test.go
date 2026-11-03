@@ -1,9 +1,9 @@
 // ==== Generic Company Inc. portfolio ====================================
-// Project: content_management_system | File: icon_test.go
+// Project: journal | File: icon_test.go
 // About: Tests for package main.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
@@ -71,4 +71,4 @@ func TestPixelExactAndCredited(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=741614899633dc1062b1a02244ceef688447f89f85101515a2446b37bd7ef410 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=f894a189957e857dda852a0c8787b2824091e80ebad2608f38f818e0e1c51912 ====

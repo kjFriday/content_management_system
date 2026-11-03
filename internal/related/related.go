@@ -1,9 +1,9 @@
 // ==== Generic Company Inc. portfolio ====================================
-// Project: content_management_system | File: internal/related/related.go
+// Project: journal | File: internal/related/related.go
 // About: Package related ranks posts by content similarity, for a "related posts" list.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
@@ -411,4 +411,4 @@ func isTagStart(c byte) bool {
 	return c == '/' || c == '!' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=34e9848476fc3978617c79af0a3baa5e98570cf2845a395adb8854a9e08508e5 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=dc37b04cdceb2d15e8b04b43973ec34bbb0779b7a95b1ccb1ca1e2e77d4d1699 ====

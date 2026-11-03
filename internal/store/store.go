@@ -1,9 +1,9 @@
 // ==== Generic Company Inc. portfolio ====================================
-// Project: content_management_system | File: internal/store/store.go
+// Project: journal | File: internal/store/store.go
 // About: Package store holds the CMS's posts in memory and answers the read API: published lists...
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
@@ -204,4 +204,4 @@ func (s *Store) Counts() map[string]int {
 	return c
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=70b7ec2e4b0849b564c59fd4f3ec7db9b0e4b6c0826aa7976ec53d3ef30df384 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=487559f02f26c2b4bfc037df89c5ddf8a5395bd36fa50f7106b33b0d9341284e ====

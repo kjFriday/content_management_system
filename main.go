@@ -1,9 +1,9 @@
 // ==== Generic Company Inc. portfolio ====================================
-// Project: content_management_system | File: main.go
+// Project: journal | File: main.go
 // About: Command generic-company-cms is Generic Company Journal, Generic Company Inc.'s posts: a...
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
@@ -314,4 +314,4 @@ var (
 {{template "bottom" .}}`))
 )
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=b068ac9fa0b090341181f23fc4c8e21b887589b61981aa192bc05e2a98c8b02f ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=27848636698afef4cbbd98eaefcb64c413b541554b4e81b57d37df9fd90e3e24 ====

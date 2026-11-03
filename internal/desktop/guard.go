@@ -1,9 +1,9 @@
 // ==== Generic Company Inc. portfolio ====================================
-// Project: content_management_system | File: internal/desktop/guard.go
+// Project: journal | File: internal/desktop/guard.go
 // About: Package desktop shows an Generic Company program's web pages in its own native window...
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
@@ -59,4 +59,4 @@ func Guard(next http.Handler, token, host string) http.Handler {
 	})
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=c294156be7b2cff72174eea4a60d88828a76accf0457e76956178587e012a891 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=db86e67645ea99c1dc5ad3ec3a8235ffcdab76d52b197d1eeab4d040ef91983f ====

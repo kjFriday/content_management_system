@@ -1,9 +1,9 @@
 // ==== Generic Company Inc. portfolio ====================================
-// Project: content_management_system | File: internal/suggest/suggest_test.go
+// Project: journal | File: internal/suggest/suggest_test.go
 // About: Tests for package suggest.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
@@ -113,4 +113,4 @@ func TestSuggestCountsRunes(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=ac66d55feedcbc3ee48102ed16de71d8c8ab0e9249ccaaf2cd16f7f945d1d82b ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=ed73a20054d7dcfad5a41b2532a7b0e5cae7250d696c2f424676b31074209cb6 ====

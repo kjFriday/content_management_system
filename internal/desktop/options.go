@@ -1,9 +1,9 @@
 // ==== Generic Company Inc. portfolio ====================================
-// Project: content_management_system | File: internal/desktop/options.go
-// About: Part of package desktop in content_management_system.
+// Project: journal | File: internal/desktop/options.go
+// About: Part of package desktop in journal.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
@@ -23,4 +23,4 @@ type Options struct {
 	Ready func(w Window)
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=4b87b7d0a0bee3ad2b9ba0160d2cf846d962b711e757873465d12a21b3097898 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=0d5b15c1d3de84132d84880aa0b3209e90242eb01ef32eee9228e6423858eeb8 ====

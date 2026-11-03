@@ -1,9 +1,9 @@
 // ==== Generic Company Inc. portfolio ====================================
-// Project: content_management_system | File: internal/db/db.go
+// Project: journal | File: internal/db/db.go
 // About: Package db opens the shared Generic Company database by path (read-only: the CMS only...
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
@@ -112,4 +112,4 @@ func LoadAuthors(path string) ([]store.Author, error) {
 	return authors, err
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=f03a5c7b77749153192916ce3bc44b4f8c9c5272ce8ada4d4c0ea72717705d14 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=39a61f43546146c560dfb9793163c06defd5a0935e914d6d08fcba5face12808 ====

@@ -1,9 +1,9 @@
 // ==== Generic Company Inc. portfolio ====================================
-// Project: content_management_system | File: internal/related/related_test.go
+// Project: journal | File: internal/related/related_test.go
 // About: Tests for package related.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
@@ -376,4 +376,4 @@ func TestBodyText(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=26cb21d3bf595e02032f9f40f846b22df77142fff2ef65a676bbae5fdd2ad274 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=74907bd94c902d0fd3dfa62d6ba9845fd3af66178aebb558251d98ddf8afab43 ====

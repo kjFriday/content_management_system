@@ -1,9 +1,9 @@
 // ==== Generic Company Inc. portfolio ====================================
-// Project: content_management_system | File: internal/textfmt/textfmt.go
+// Project: journal | File: internal/textfmt/textfmt.go
 // About: Package textfmt holds small string helpers for listings, logs and the admin views.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
-// the version kjFriday wrote. Verify with the portfolio's stamp.py --check.
+// the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
@@ -123,4 +123,4 @@ func PadRight(s string, n int) string {
 	return s
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=f8ddca18e32a08dfde05642bf395d77d28d9ca35ebd13f7399f1c2e07b9be289 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=263ac284e5e63e82b2ad80ed48f32f7f287995417404be8fef6894b9d159fbde ====
