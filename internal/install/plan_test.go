@@ -17,6 +17,7 @@ import (
 	"testing"
 )
 
+// value finds the registry value called name in p, or the zero Value.
 func value(p Plan, name string) Value {
 	for _, v := range p.Registry {
 		if v.Name == name {
@@ -26,6 +27,8 @@ func value(p Plan, name string) Value {
 	return Value{}
 }
 
+// TestPlan pins a sandbox plan: folder, two shortcuts, the registry values and the uninstall
+// command's -root. A 4096-byte exe gives EstimatedSize 5 (4 KB, plus the 1 that rounds up).
 func TestPlan(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, true, 4096, day)
@@ -55,6 +58,8 @@ func TestPlan(t *testing.T) {
 	}
 }
 
+// TestRealLocations pins the per-user folders taken from LOCALAPPDATA and APPDATA, and no
+// registry file outside a sandbox.
 func TestRealLocations(t *testing.T) {
 	env := map[string]string{"LOCALAPPDATA": `C:\L`, "APPDATA": `C:\R`, "USERPROFILE": `C:\U`}
 	programs, start, _, reg := Locations(func(k string) string { return env[k] }, "")
@@ -63,4 +68,4 @@ func TestRealLocations(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=e3741482a8803e36b70d7308a6ce5de3ca2593e3b105de46ea5ef427d253dec2 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=4140fcff11ad4e27c1dded4d607c8106cd22b9d2b3fa2212cec2c72528acbbb4 ====

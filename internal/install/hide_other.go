@@ -16,6 +16,7 @@ package install
 import "os/exec"
 
 // hide does nothing off Windows, where installing is not supported (it is all PowerShell and the registry).
+// line is ignored; DeleteAfterExit's cmd.exe does not exist off Windows anyway, so its Start fails.
 func hide(cmd *exec.Cmd, line string) {}
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=d3a47b72e941c94d7c7064b0df0cf497bf2c8ba54b975b59cf5393cc95a18c8c ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=55295aae96c15227a603a1f94ae69c72f31cb81947d46b6fdb3bc6ab795a0add ====

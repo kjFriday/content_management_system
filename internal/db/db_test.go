@@ -1,11 +1,15 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: journal | File: internal/db/db_test.go
-// About: Tests for package db.
+// About: Tests for package db against a database built from the CRUD hub's schema and mock rows.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
+
+// Tests for package db against a database built from the CRUD hub's schema and mock rows.
+//
+// The fixtures live in ../../mock; without them the tests skip rather than fail.
 
 package db
 
@@ -44,6 +48,8 @@ func mockDB(t *testing.T) string {
 	return path
 }
 
+// TestAuthorsFromTheSharedDatabase pins that all 120 mock employees come back as authors, in id
+// order starting at 1.
 func TestAuthorsFromTheSharedDatabase(t *testing.T) {
 	authors, err := LoadAuthors(mockDB(t))
 	if err != nil {
@@ -54,6 +60,8 @@ func TestAuthorsFromTheSharedDatabase(t *testing.T) {
 	}
 }
 
+// TestReadOnlyAndNeverCreated pins the two promises to the hub: a DELETE through Open fails, and
+// opening a missing path neither succeeds nor leaves a file behind.
 func TestReadOnlyAndNeverCreated(t *testing.T) {
 	path := mockDB(t)
 	conn, err := Open(path)
@@ -73,6 +81,8 @@ func TestReadOnlyAndNeverCreated(t *testing.T) {
 	}
 }
 
+// TestSchemaCheck pins the exact error for an employees table without its role column, the text
+// the footer shows.
 func TestSchemaCheck(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "bad.db")
 	conn, _ := sql.Open("sqlite", path)
@@ -83,4 +93,4 @@ func TestSchemaCheck(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=772f6ad3c9eedd773434513b6ab6821708d0c2fc8d12f1eefba8e07c4caa2cf1 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=4b00c3e66a6961a9dd8ee5c64107919f515527d86f853314f8675e68c573c8af ====

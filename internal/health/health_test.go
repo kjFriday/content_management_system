@@ -1,11 +1,13 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: journal | File: internal/health/health_test.go
-// About: Tests for package health.
+// About: Tests for package health: Take's readings, and Handler's JSON, headers and methods.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
+
+// Tests for package health: Take's readings, and Handler's JSON, headers and methods.
 
 package health
 
@@ -21,6 +23,8 @@ import (
 	"time"
 )
 
+// TestTakeReadsTheRuntime checks each field against the runtime. A start 90 s back gives a known
+// uptime (up to 95 allows for a slow machine), and a forced GC makes num_gc at least 1.
 func TestTakeReadsTheRuntime(t *testing.T) {
 	runtime.GC()
 	start := time.Now().Add(-90 * time.Second)
@@ -46,12 +50,14 @@ func TestTakeReadsTheRuntime(t *testing.T) {
 	}
 }
 
+// TestTakeNeverReportsNegativeUptime pins the clamp: a start an hour ahead reads as 0.
 func TestTakeNeverReportsNegativeUptime(t *testing.T) {
 	if s := Take(time.Now().Add(time.Hour)); s.UptimeSeconds != 0 {
 		t.Errorf("a start time in the future gave uptime %d, want 0", s.UptimeSeconds)
 	}
 }
 
+// TestHandlerServesJSON pins a GET's status, content type, no-store and the exact set of fields.
 func TestHandlerServesJSON(t *testing.T) {
 	rec := httptest.NewRecorder()
 	Handler(time.Now()).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/health", nil))
@@ -82,6 +88,7 @@ func TestHandlerServesJSON(t *testing.T) {
 	}
 }
 
+// TestHandlerRejectsOtherMethods pins 405 and the Allow header for the methods that change things.
 func TestHandlerRejectsOtherMethods(t *testing.T) {
 	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodDelete} {
 		rec := httptest.NewRecorder()
@@ -132,4 +139,4 @@ func TestHandlerOverHTTP(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=46c90f24c4796a37eae541ac7c9e0799655973ae5a7bf01f5c3b3027e63d4044 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=7fb36a0c48cf165738516f533d86f5da1712aa2557d1ad9502f36d0b0a093727 ====

@@ -1,11 +1,20 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: journal | File: internal/related/related_test.go
-// About: Tests for package related.
+// About: Tests for the TF-IDF engine and for BodyText.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
+
+// Tests for the TF-IDF engine and for BodyText.
+//
+// They cover tokenizing, IDF smoothing, vector norms, cosine and centroid
+// math, ranking and its tie-breaks, determinism across runs, the JSON
+// field names, and BodyText on Editor.js and TipTap bodies.
+// Most cases run on posts, six short posts in three topic pairs, so the
+// expected neighbours are easy to check by eye. The tests sit inside
+// package related so they can read the unexported idf and vecs fields.
 
 package related
 
@@ -26,6 +35,7 @@ var posts = []Doc{
 	{Name: "volunteer-day-recap", Text: "Forty employees spent volunteer day planting trees along the river trail."},
 }
 
+// norm returns the L2 length of v; a normalized vector has norm 1.
 func norm(v vector) float64 {
 	var s float64
 	for _, w := range v {
@@ -34,6 +44,7 @@ func norm(v vector) float64 {
 	return math.Sqrt(s)
 }
 
+// names lists the Name of each result, for short failure messages.
 func names(recs []Recommendation) []string {
 	out := make([]string, 0, len(recs))
 	for _, r := range recs {
@@ -42,6 +53,8 @@ func names(recs []Recommendation) []string {
 	return out
 }
 
+// TestTokenizeKeepsSignalAndDropsStopWords pins that stop words, case,
+// punctuation and one-rune tokens go while a year stays as a term.
 func TestTokenizeKeepsSignalAndDropsStopWords(t *testing.T) {
 	got := tokenize("The launch, 2026 -- quarterly roadmap ON the dashboard. a")
 	want := map[string]bool{"launch": true, "2026": true, "quarterly": true,
@@ -60,6 +73,9 @@ func TestTokenizeKeepsSignalAndDropsStopWords(t *testing.T) {
 	}
 }
 
+// TestTokenizeKeepsNonASCIIWordsWhole pins that accented letters stay
+// inside their word and that a lone "é" (one rune, two bytes) is dropped,
+// so the one-rune rule counts runes, not bytes.
 func TestTokenizeKeepsNonASCIIWordsWhole(t *testing.T) {
 	got := tokenize("Café menu: crème brûlée, é")
 	want := []string{"café", "menu", "crème", "brûlée"}
@@ -73,6 +89,8 @@ func TestTokenizeKeepsNonASCIIWordsWhole(t *testing.T) {
 	}
 }
 
+// TestTokenizeKeepsCombiningMarksInWords pins that combining marks join
+// the word before them but never start one.
 func TestTokenizeKeepsCombiningMarksInWords(t *testing.T) {
 	// "cafe" + U+0301 is the decomposed spelling of café. The Hindi word
 	// has vowel signs and a virama between its letters. A mark with no
@@ -104,6 +122,9 @@ func TestIDFIsSmoothedAndOrdered(t *testing.T) {
 	}
 }
 
+// TestCosineIsWellBehaved pins the cosine basics: identical texts score 1,
+// texts with no term in common score 0, the score is symmetric and it
+// never leaves [0, 1].
 func TestCosineIsWellBehaved(t *testing.T) {
 	ix := New([]Doc{
 		{Name: "a", Text: "pricing roadmap dashboard"},
@@ -128,6 +149,9 @@ func TestCosineIsWellBehaved(t *testing.T) {
 	}
 }
 
+// TestCentroidIsNormalizedAndFavoursSharedTerms pins that the averaged
+// profile has unit length and weighs the term both inputs share above the
+// term only one of them has.
 func TestCentroidIsNormalizedAndFavoursSharedTerms(t *testing.T) {
 	if len(centroid(nil)) != 0 {
 		t.Error("an empty set produced a profile")
@@ -145,6 +169,8 @@ func TestCentroidIsNormalizedAndFavoursSharedTerms(t *testing.T) {
 	}
 }
 
+// TestEveryVectorIsUnitLength pins that New fits one vector per post and
+// that each is L2-normalized, which cosine relies on.
 func TestEveryVectorIsUnitLength(t *testing.T) {
 	ix := New(posts)
 	if len(ix.vecs) != len(posts) {
@@ -157,6 +183,8 @@ func TestEveryVectorIsUnitLength(t *testing.T) {
 	}
 }
 
+// TestRelatedFindsTheClosestPostFirst pins the expected neighbour of two
+// fixture posts (the other post of each topic pair) and descending scores.
 func TestRelatedFindsTheClosestPostFirst(t *testing.T) {
 	ix := New(posts)
 	got := ix.Related("orbit-dashboard-launch", 3)
@@ -203,6 +231,9 @@ func TestRelatedNeverReturnsTheSeedAndNeverPads(t *testing.T) {
 	}
 }
 
+// TestSharedTermsAreInBothPosts pins, for every fixture pair, that each
+// listed shared term has weight in both posts and that at most four are
+// listed.
 func TestSharedTermsAreInBothPosts(t *testing.T) {
 	ix := New(posts)
 	for _, seed := range posts {
@@ -221,6 +252,10 @@ func TestSharedTermsAreInBothPosts(t *testing.T) {
 	}
 }
 
+// TestRelatedToSet pins the set version: empty and unknown sets give nil,
+// set members are never recommended, and a repeated name counts once. The
+// two Orbit posts together lead to the revenue post, which shares "sales",
+// "revenue" and "region" with both.
 func TestRelatedToSet(t *testing.T) {
 	ix := New(posts)
 	if got := ix.RelatedToSet(nil, 5); got != nil {
@@ -312,6 +347,8 @@ func TestLinkCardsDoNotMatchPosts(t *testing.T) {
 	}
 }
 
+// TestRecommendationJSONFieldNames pins the JSON keys the API answers
+// with, so a field rename cannot silently break clients.
 func TestRecommendationJSONFieldNames(t *testing.T) {
 	b, err := json.Marshal(Recommendation{Name: "a", Score: 0.5, Shared: []string{"x"}})
 	if err != nil {
@@ -322,6 +359,9 @@ func TestRecommendationJSONFieldNames(t *testing.T) {
 	}
 }
 
+// TestBodyText pins BodyText on real-shaped Editor.js and TipTap bodies,
+// link cards and embeds, bare links, inline tags and entities, and on
+// bodies that are a bare JSON value or not JSON at all.
 func TestBodyText(t *testing.T) {
 	cases := []struct {
 		name string
@@ -376,4 +416,4 @@ func TestBodyText(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=74907bd94c902d0fd3dfa62d6ba9845fd3af66178aebb558251d98ddf8afab43 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=301352e9fd2ba4c9a814b3aacaef8a11ece0c01d8adab36966fa0cd3da3c049b ====

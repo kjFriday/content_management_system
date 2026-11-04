@@ -8,6 +8,9 @@
 // ========================================================================
 
 // The Windows-only process flags behind hide; hide_other.go stands in on other systems.
+//
+// The _windows.go file name is the build constraint. syscall.SysProcAttr has these fields only
+// on Windows, which is why they live in a file of their own.
 
 package install
 
@@ -17,8 +20,13 @@ import (
 )
 
 // hide starts cmd with no console window; a non-empty line is the exact command line Windows gets.
+//
+// Go normally builds the command line from cmd.Args, quoting each argument its own way. cmd.exe
+// parses its /c text by its own rules, so DeleteAfterExit passes the finished line here instead.
+// HideWindow sets SW_HIDE for the started window; CREATE_NO_WINDOW (0x08000000) keeps a console
+// program from getting a console at all, so no black box flashes up.
 func hide(cmd *exec.Cmd, line string) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{CmdLine: line, HideWindow: true, CreationFlags: 0x08000000} // CREATE_NO_WINDOW
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=31f783d90ad2ee399f67d8d5a74528216f197d2e45606fffb51193de59eeb8eb ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=82b1c9f60f6779eb29940faaa38cec5b8c4e5e33af72b2fc7fa338f9e3a8c22c ====

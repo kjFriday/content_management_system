@@ -1,11 +1,13 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: journal | File: internal/desktop/guard_test.go
-// About: Tests for package desktop.
+// About: Tests for Guard and NewToken: who gets through to the window's local server.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
+
+// Tests for Guard and NewToken: who gets through to the window's local server.
 
 package desktop
 
@@ -15,6 +17,9 @@ import (
 	"testing"
 )
 
+// TestGuard pins each refusal (no cookie, wrong token, wrong Host, forged cookie) and the one way
+// in: /__open with the token, which sets an HttpOnly, SameSite=Strict cookie and redirects to "/".
+// The forged cookie differs from the token in its first character only.
 func TestGuard(t *testing.T) {
 	token := NewToken()
 	if len(token) != 32 || token == NewToken() {
@@ -56,4 +61,4 @@ func TestGuard(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=acf84542037d2002b8cba75099c2250462e18eacb50e00b1e1a9ee26a1fe6afc ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=871f3b37661e60819201cf2fb3a549301f43ace3cd2c51fa3838e144e8224379 ====

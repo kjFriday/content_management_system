@@ -16,6 +16,8 @@ import (
 	"testing"
 )
 
+// TestScriptQuotingAndRegistry pins the quoting with a folder named O'Brien, the DWord and String
+// value types and the real HKCU key; the removal script must remove the key and make no shortcut.
 func TestScriptQuotingAndRegistry(t *testing.T) {
 	prog, _ := setup(t)
 	env := map[string]string{"LOCALAPPDATA": `C:\O'Brien`, "APPDATA": `C:\R`}
@@ -37,6 +39,7 @@ func TestScriptQuotingAndRegistry(t *testing.T) {
 	}
 }
 
+// TestSandboxNeverTouchesRegistry pins that neither sandbox script mentions HKCU.
 func TestSandboxNeverTouchesRegistry(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, false, 1, day)
@@ -45,6 +48,9 @@ func TestSandboxNeverTouchesRegistry(t *testing.T) {
 	}
 }
 
+// TestPowerShellOutput runs the real PowerShell (skipped with -short): a non-ASCII character
+// (U+00F6) survives the round trip as UTF-8, and a missing uninstall key reads as "", not an
+// error.
 func TestPowerShellOutput(t *testing.T) {
 	if testing.Short() {
 		t.Skip("runs PowerShell")
@@ -60,4 +66,4 @@ func TestPowerShellOutput(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=b9e720413772a59e59bba49ad60759d24ba3cfa78d996e6c1ed68521cd8ca5be ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=3d1b1dcb04d1303fbb610d7bbf049734cbacae6c680090ddedfae8911dd5d772 ====

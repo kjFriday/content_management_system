@@ -14,6 +14,44 @@
 // The IDF is the smoothed form log((1+N)/(1+df)) + 1, the default in
 // scikit-learn's TfidfVectorizer, so scores can be cross-checked there.
 // Every result lists the terms that contributed most to its score.
+//
+// # TF-IDF and cosine similarity in brief
+//
+// Each document becomes a vector with one dimension per word (a "term").
+// The weight of a term in a document is TF times IDF:
+//
+//   - TF (term frequency) is how often the term occurs in the document,
+//     divided by the document's token count, so long posts are not
+//     favoured just for being long.
+//   - IDF (inverse document frequency) is large for a term few documents
+//     use and small for one most documents use. With N documents and df
+//     of them containing the term, the smoothed IDF here is
+//     log((1+N)/(1+df)) + 1. The +1 inside acts as if one extra document
+//     held every term, which damps the jump for very rare terms; the +1
+//     outside keeps a term found everywhere at weight 1 instead of 0.
+//
+// Every vector is then scaled to length 1 (L2 normalization: divide by
+// the square root of the sum of squared weights). The cosine of the angle
+// between two such vectors is just their dot product: 1 for the same mix
+// of terms, 0 for no term in common. Weights are never negative, so
+// scores stay in [0, 1].
+//
+// # Flow
+//
+//  1. A caller (package store) builds one Doc per published post and
+//     calls New.
+//  2. New tokenizes every Doc, counts document frequencies, computes the
+//     IDF table and one normalized vector per Doc.
+//  3. Related scores one Doc's vector against all others; RelatedToSet
+//     first averages several vectors (a centroid) and scores that.
+//  4. rank keeps positive scores, sorts them and attaches the shared
+//     terms that explain each score.
+//
+// Types: Doc (input), Index (the fitted corpus), Recommendation (output)
+// and the internal sparse vector. body.go adds BodyText, which turns a
+// post's JSON body into the text a Doc is built from.
+//
+// Start reading at New.
 package related
 
 import (
@@ -44,9 +82,18 @@ var stopWords = map[string]bool{
 // (an accent, or a vowel sign in scripts such as Devanagari) stays inside
 // the word it follows. Text is expected in NFC: the standard library has
 // no normalizer, so a decomposed (NFD) spelling is a different term.
+//
+// Steps:
+//  1. Lowercase the whole document once.
+//  2. Append letters and digits to the current token; append a combining
+//     mark only when a token is already open, so a stray mark at a word
+//     start never begins a token.
+//  3. On any other rune, flush: keep the token if it has two or more
+//     runes and is not a stop word.
 func tokenize(doc string) []string {
 	var out []string
 	var b strings.Builder
+	// flush ends the current token and keeps it if it carries signal.
 	flush := func() {
 		if b.Len() == 0 {
 			return
@@ -69,28 +116,42 @@ func tokenize(doc string) []string {
 }
 
 // Doc is one item in the corpus. Name identifies it (a post slug) and
-// Text is what it is compared by (title, tags, body text).
+// Text is what it is compared by (title, tags, body text). Name is also
+// what results report and what Related and RelatedToSet look up.
 type Doc struct {
 	Name string
 	Text string
 }
 
-// vector is a sparse, L2-normalized TF-IDF vector: term -> weight.
+// vector is a sparse, L2-normalized TF-IDF vector: term -> weight. A
+// term absent from the map has weight zero, so only the terms a document
+// uses are stored.
 type vector map[string]float64
 
 // Index is a fitted corpus. Build it with New. It is read-only after
 // that and safe for concurrent use.
 type Index struct {
-	docs   []Doc
-	byName map[string]int
-	idf    map[string]float64
-	vecs   []vector
+	docs   []Doc              // a private copy of the input, in input order
+	byName map[string]int     // Name -> position in docs (the first for a repeated Name)
+	idf    map[string]float64 // term -> smoothed IDF, for every term in the corpus
+	vecs   []vector           // one normalized TF-IDF vector per doc, same order as docs
 }
 
 // New fits an index over docs: document frequencies, smoothed IDF,
 // TF-IDF weights and L2 normalization. Name is tokenized along with
 // Text, so the words in a slug count toward its content. If two docs
 // share a Name, lookups use the first.
+//
+// Steps:
+//  1. Copy docs, so a caller that later changes its slice cannot change
+//     the index.
+//  2. Tokenize each doc and count, per term, how many docs contain it
+//     (document frequency: a term counts once per doc however often it
+//     repeats there).
+//  3. Turn each document frequency into a smoothed IDF.
+//  4. Weigh each doc's tokens into a normalized TF-IDF vector.
+//
+// An empty docs gives an empty index whose lookups all return nil.
 func New(docs []Doc) *Index {
 	docs = append([]Doc(nil), docs...)
 	ix := &Index{docs: docs, byName: map[string]int{}, idf: map[string]float64{}}
@@ -105,7 +166,10 @@ func New(docs []Doc) *Index {
 		if _, dup := ix.byName[d.Name]; !dup {
 			ix.byName[d.Name] = i
 		}
+		// a slug such as "orbit-dashboard-launch" splits on its hyphens
+		// into ordinary terms
 		toks[i] = tokenize(d.Name + " " + d.Text)
+		// ranging over the distinct terms counts each term once per doc
 		for t := range countTerms(toks[i]) {
 			df[t]++
 		}
@@ -123,6 +187,8 @@ func New(docs []Doc) *Index {
 	return ix
 }
 
+// countTerms returns how many times each term occurs in toks. New uses
+// only its keys (the distinct terms); weigh uses the counts as raw TF.
 func countTerms(toks []string) map[string]int {
 	c := map[string]int{}
 	for _, t := range toks {
@@ -132,7 +198,9 @@ func countTerms(toks []string) map[string]int {
 }
 
 // weigh turns tokens into an L2-normalized TF-IDF vector. Terms the
-// index has never seen have no IDF and are skipped.
+// index has never seen have no IDF and are skipped. TF is the count
+// divided by all of toks, unknown terms included. An empty toks gives an
+// empty vector, which scores zero against everything.
 func (ix *Index) weigh(toks []string) vector {
 	if len(toks) == 0 {
 		return vector{}
@@ -162,6 +230,10 @@ func sortedTerms(v vector) []string {
 	return ts
 }
 
+// normalize scales v in place to unit length (L2 norm 1) and returns it.
+// The squares are summed in sorted term order so the norm, and so every
+// weight, is the same on every run. A vector with no weight is returned
+// unchanged rather than divided by zero.
 func normalize(v vector) vector {
 	var sum float64
 	for _, t := range sortedTerms(v) {
@@ -182,6 +254,8 @@ func normalize(v vector) vector {
 // the score is bit-for-bit the same on every call and in either argument
 // order.
 func cosine(a, b vector) float64 {
+	// a term missing from either side adds nothing, so only the shorter
+	// vector's terms need checking
 	if len(a) > len(b) {
 		a, b = b, a
 	}
@@ -200,7 +274,11 @@ func cosine(a, b vector) float64 {
 }
 
 // centroid averages vectors and renormalizes. An empty input gives an
-// empty vector, which scores zero against everything.
+// empty vector, which scores zero against everything. Terms shared by
+// several inputs add up, so the profile leans toward what they have in
+// common. The averaging sum runs in map order; that cannot change a
+// result here, because each term receives at most one weight per input
+// vector in the same input order.
 func centroid(vs []vector) vector {
 	if len(vs) == 0 {
 		return vector{}
@@ -218,14 +296,19 @@ func centroid(vs []vector) vector {
 }
 
 // sharedTerms returns up to top terms present in both vectors, ordered
-// by the product of their weights (ties alphabetical).
+// by the product of their weights (ties alphabetical). That product is
+// each term's share of the cosine score, so the first term is the one
+// that explains the score best.
 func sharedTerms(a, b vector, top int) []string {
+	// pair is one shared term and its contribution to the dot product.
 	type pair struct {
 		term string
 		w    float64
 	}
 	var ps []pair
 	for t, w := range a {
+		// a weight can be zero only through underflow; such a term
+		// explains nothing, so it is not shown
 		if bw, ok := b[t]; ok && w*bw > 0 {
 			ps = append(ps, pair{t, w * bw})
 		}
@@ -247,7 +330,8 @@ func sharedTerms(a, b vector, top int) []string {
 }
 
 // Recommendation is one ranked result. Shared lists up to four terms
-// that contributed most to Score, highest first.
+// that contributed most to Score, highest first. Score is a cosine in
+// (0, 1], up to float rounding. The JSON names are part of the API and pinned by a test.
 type Recommendation struct {
 	Name   string   `json:"name"`
 	Score  float64  `json:"score"`
@@ -258,6 +342,16 @@ type Recommendation struct {
 // returns the top k with a positive score. A zero score means no shared
 // term at all, so it is dropped rather than used as padding. Equal scores
 // are ordered by Name, then by position in the index.
+//
+// Steps:
+//  1. Score every document not in skip by cosine against profile.
+//  2. Keep positive scores, each with its top four shared terms.
+//  3. Sort by score, highest first; a stable sort with Name as the
+//     tie-break keeps the order the same on every run.
+//  4. Cut the list to k.
+//
+// Every document is scored on each call, so the cost grows with the
+// corpus; that is fine for a blog-sized corpus.
 func (ix *Index) rank(profile vector, skip map[string]bool, k int) []Recommendation {
 	var out []Recommendation
 	for i, d := range ix.docs {
@@ -302,6 +396,12 @@ func (ix *Index) Related(name string, k int) []Recommendation {
 // named ones (for example, the posts a reader has already opened). The
 // named documents are excluded, repeats count once and unknown names are
 // ignored. It returns nil if none of the names is in the index.
+//
+// Steps:
+//  1. Walk names once, marking each name to skip and collecting the
+//     vector of each known name the first time it appears.
+//  2. Average the collected vectors into one normalized profile.
+//  3. Rank the rest of the corpus against that profile.
 func (ix *Index) RelatedToSet(names []string, k int) []Recommendation {
 	if k <= 0 {
 		return nil
@@ -323,4 +423,4 @@ func (ix *Index) RelatedToSet(names []string, k int) []Recommendation {
 	return ix.rank(centroid(seen), skip, k)
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=04c7d031898c3cbd46869ea4c94227926d8718da672c8731a0b3f2a5b468b785 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=024640ff199df45d49dc7c5077bc1a87aaa69b4747085bd0b50d4b437d169f0f ====

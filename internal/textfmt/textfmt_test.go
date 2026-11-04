@@ -1,11 +1,15 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: journal | File: internal/textfmt/textfmt_test.go
-// About: Tests for package textfmt.
+// About: Tests for the string helpers.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
+
+// Tests for the string helpers. Most cases mix ASCII with accented and CJK
+// text, because every length here is counted in runes and a byte-counting
+// bug would only show on multi-byte input.
 
 package textfmt
 
@@ -18,6 +22,8 @@ import (
 	"unicode/utf8"
 )
 
+// TestTruncate pins the ellipsis rule, rune counting, the n <= 0 cases and
+// that no result is ever longer than n runes.
 func TestTruncate(t *testing.T) {
 	cases := []struct {
 		s    string
@@ -45,6 +51,7 @@ func TestTruncate(t *testing.T) {
 	}
 }
 
+// TestPlural pins that only exactly 1 is singular, 0 and -1 included.
 func TestPlural(t *testing.T) {
 	for n, want := range map[int]string{0: "posts", 1: "post", 2: "posts", -1: "posts"} {
 		if got := Plural(n, "post", "posts"); got != want {
@@ -53,6 +60,9 @@ func TestPlural(t *testing.T) {
 	}
 }
 
+// TestShortDuration pins each unit pair, zero padding of the smaller unit,
+// truncation instead of rounding, negatives, and that MinInt64 gets one
+// minus sign rather than overflowing.
 func TestShortDuration(t *testing.T) {
 	cases := []struct {
 		d    time.Duration
@@ -79,6 +89,8 @@ func TestShortDuration(t *testing.T) {
 	}
 }
 
+// TestOneLine pins that tabs, CRLF and blank lines collapse to single
+// spaces and that blank input becomes "".
 func TestOneLine(t *testing.T) {
 	in := "  Quarterly\tresults\r\n\n  are   in  "
 	if got, want := OneLine(in), "Quarterly results are in"; got != want {
@@ -89,6 +101,7 @@ func TestOneLine(t *testing.T) {
 	}
 }
 
+// TestWrap pins each documented Wrap rule with one named case.
 func TestWrap(t *testing.T) {
 	cases := []struct {
 		name  string
@@ -127,6 +140,8 @@ func TestWrapRespectsWidth(t *testing.T) {
 	}
 }
 
+// TestPadRight pins padding by runes, that long strings are not cut, and
+// the Truncate-then-pad pairing for a fixed-width column.
 func TestPadRight(t *testing.T) {
 	cases := []struct {
 		s    string
@@ -150,4 +165,4 @@ func TestPadRight(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=e1a9f23c9e00234f01f312dbc5152916d3d397443e58674c92a92c6826a26a47 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=b77cbf378dd4096bcc7a286f71131be4d9ddeabcfae85a4faa60ea077a1b3904 ====

@@ -1,11 +1,16 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: journal | File: icon_test.go
-// About: Tests for package main.
+// About: Tests for the icons: pixel-exact enlargements of the Silk original, and credited.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
+
+// Tests for the icons: pixel-exact enlargements of the Silk original, and credited.
+//
+// The icon/ files come from tools/pixel_icons.py; this test checks its output rather than
+// trusting it. icons is the embedded file set from main.go.
 
 package main
 
@@ -21,6 +26,15 @@ import (
 )
 
 // Every size is the 16 px Silk original enlarged by whole pixels, and the files match the credits table.
+//
+// Steps:
+//  1. For the 32 px (x2) and 256 px (x16) PNGs, every pixel must equal the original's pixel at
+//     (x/k, y/k): nearest-neighbour scaling, no smoothing. Colour is compared only where the pixel
+//     is not fully transparent, since a transparent pixel's colour is invisible.
+//  2. app.ico must hold four images: the little-endian uint16 at byte 4 of an ICO header is the
+//     image count (bytes 0-1 are reserved, 2-3 the type, 1 for an icon).
+//  3. icon/README.md must carry the CC BY 2.5 credit and a table of exactly 6 files, each row
+//     "| `name` | ... | `sha256` |", and every listed file must hash to its row.
 func TestPixelExactAndCredited(t *testing.T) {
 	PNG32, _ := icons.ReadFile("icon/app-32.png")
 	PNG256, _ := icons.ReadFile("icon/app-256.png")
@@ -71,4 +85,4 @@ func TestPixelExactAndCredited(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=f894a189957e857dda852a0c8787b2824091e80ebad2608f38f818e0e1c51912 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=cd29a72e39f9cf1cff064589e7f70a5cc018a25ae853cb1d68b3d855f2416c29 ====

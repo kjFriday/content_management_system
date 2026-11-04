@@ -1,16 +1,25 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: journal | File: internal/suggest/suggest_test.go
-// About: Tests for package suggest.
+// About: Tests for the did-you-mean helper.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
+// Tests for the did-you-mean helper.
+//
+// They cover Levenshtein distances on textbook pairs and non-ASCII text,
+// and Suggest's limits, prefix rule, case and space handling and
+// tie-break, run against a small list of site slugs.
+
 package suggest
 
 import "testing"
 
+// TestEditDistance pins textbook Levenshtein pairs ("kitten"/"sitting" is
+// 3), empty sides, a swap costing two, rune counting on accented and CJK
+// text, and symmetry.
 func TestEditDistance(t *testing.T) {
 	cases := []struct {
 		a, b string
@@ -47,6 +56,9 @@ var slugs = []string{
 	"spring-product-launch",
 }
 
+// TestSuggest pins each rule against the slugs fixture: one and two edit
+// typos, case and space, the short-word limit, truncated slugs, exact
+// matches and words with nothing close.
 func TestSuggest(t *testing.T) {
 	cases := []struct {
 		word   string
@@ -77,6 +89,8 @@ func TestSuggest(t *testing.T) {
 	}
 }
 
+// TestSuggestReturnsTheEntryAsWritten pins that matching lowercases but
+// the hint keeps the entry's own capitals.
 func TestSuggestReturnsTheEntryAsWritten(t *testing.T) {
 	got, ok := Suggest("carers", []string{"Careers"})
 	if !ok || got != "Careers" {
@@ -84,6 +98,8 @@ func TestSuggestReturnsTheEntryAsWritten(t *testing.T) {
 	}
 }
 
+// TestSuggestBreaksTiesAlphabetically pins that two entries one edit
+// away resolve to the alphabetically first, whatever their order in vocab.
 func TestSuggestBreaksTiesAlphabetically(t *testing.T) {
 	got, ok := Suggest("plog", []string{"slog", "blog"})
 	if !ok || got != "blog" {
@@ -91,6 +107,7 @@ func TestSuggestBreaksTiesAlphabetically(t *testing.T) {
 	}
 }
 
+// TestSuggestEmptyVocabulary pins that a nil vocabulary gives no hint.
 func TestSuggestEmptyVocabulary(t *testing.T) {
 	if got, ok := Suggest("pricing", nil); ok || got != "" {
 		t.Errorf("Suggest with no vocab = (%q, %v), want (\"\", false)", got, ok)
@@ -113,4 +130,4 @@ func TestSuggestCountsRunes(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=ed73a20054d7dcfad5a41b2532a7b0e5cae7250d696c2f424676b31074209cb6 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=2e878feba1097d9062ab42a80c6667851c6526784f6e71aeaf03863c2358256f ====

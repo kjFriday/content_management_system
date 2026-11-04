@@ -1,11 +1,19 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: journal | File: main_test.go
-// About: Tests for package main.
+// About: End-to-end tests for the routes, pages and API.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
+
+// End-to-end tests for the routes, pages and API.
+//
+// Each test starts routes on an httptest server over the embedded snapshot
+// and checks status codes and bodies. The
+// database path always points at a file that does not exist in a temporary
+// folder, so the site runs on the snapshot and a test can also check that no
+// database file is created.
 
 package main
 
@@ -23,6 +31,8 @@ import (
 	"generic-company/cms/internal/store"
 )
 
+// server starts the owner's (non-public) routes over the snapshot and returns the server and the
+// store it serves, which the test reads for expected values. The server closes when the test ends.
 func server(t *testing.T) (*httptest.Server, *store.Store) {
 	t.Helper()
 	st := newSite(filepath.Join(t.TempDir(), "none.db"), false)
@@ -32,6 +42,7 @@ func server(t *testing.T) (*httptest.Server, *store.Store) {
 	return srv, s
 }
 
+// get fetches url and returns the status code and the body; a transport error fails the test.
 func get(t *testing.T, url string) (int, string) {
 	t.Helper()
 	resp, err := http.Get(url)
@@ -43,6 +54,9 @@ func get(t *testing.T, url string) (int, string) {
 	return resp.StatusCode, string(b)
 }
 
+// TestAPI pins every JSON route: the list matches the store, a post and its related list answer
+// 200, a slug with its last letter changed to "x" answers 404 with a did_you_mean, the source is
+// the snapshot, and health answers outside -public.
 func TestAPI(t *testing.T) {
 	srv, s := server(t)
 	code, body := get(t, srv.URL+"/api/posts")
@@ -69,6 +83,8 @@ func TestAPI(t *testing.T) {
 	}
 }
 
+// TestPages pins the HTML pages: the index lists the newest post, a post page shows its author, a
+// search for "<script>" comes back escaped, and an unknown slug answers 404.
 func TestPages(t *testing.T) {
 	srv, s := server(t)
 	first := s.Published()[0]
@@ -86,6 +102,8 @@ func TestPages(t *testing.T) {
 	}
 }
 
+// TestNoDatabaseMeansSnapshot pins the fallback: a missing database means snapshot authors, the
+// footer says so, the file is not created by the attempt, and switching to it fails.
 func TestNoDatabaseMeansSnapshot(t *testing.T) {
 	missing := filepath.Join(t.TempDir(), "none.db")
 	st := newSite(missing, false)
@@ -100,6 +118,8 @@ func TestNoDatabaseMeansSnapshot(t *testing.T) {
 	}
 }
 
+// TestIconsAndAboutPage pins the three icon routes and their content types, and that the About page
+// shows the credit line (it contains "CC BY 2.5") and the version "0.2.0".
 func TestIconsAndAboutPage(t *testing.T) {
 	srv, _ := server(t)
 	for path, kind := range map[string]string{"/favicon.ico": "image/x-icon", "/icon-32.png": "image/png", "/icon-256.png": "image/png"} {
@@ -114,6 +134,8 @@ func TestIconsAndAboutPage(t *testing.T) {
 	}
 }
 
+// TestPublic pins the -public site behind secure: no page or API answer shows the database path or
+// its form, every answer carries the security headers, POST /about answers 405 and /api/health 404.
 func TestPublic(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "none.db")
 	st := newSite(dbPath, false)
@@ -153,4 +175,4 @@ func TestPublic(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=98686c9a8335bf29ddf772ce268f439671a83636cf1855642c6030b92a35a4a8 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=03ff7b590302299b2266beacced4fdc84b7e891efc94f059131215ad28ab8474 ====

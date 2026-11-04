@@ -1,14 +1,22 @@
 // ==== Generic Company Inc. portfolio ====================================
 // Project: journal | File: pages.go
-// About: The HTML pages: the layout every page shares (head, inline CSS, header, footer), the four...
+// About: The HTML pages: the shared layout, the four page templates and render.
 // Copyright (c) 2026 kjFriday | SPDX-License-Identifier: AGPL-3.0-only
 // You may change this file under the AGPL-3.0. The stamp at the end marks
 // the version kjFriday wrote. Verify with the portfolio's tools/stamp.py --check.
 // Reused code, if any, is mapped in PROVENANCE.md.
 // ========================================================================
 
-// The HTML pages: the layout every page shares (head, inline CSS, header, footer), the four page
-// templates, and render, which writes one as the answer.
+// The HTML pages: the shared layout, the four page templates and render.
+//
+// layout holds what every page shares (head, inline CSS, header, footer); indexPage, postPage,
+// missingPage and aboutPage are the pages; render writes one as the answer. routes in main.go picks
+// the page and fills its data.
+//
+// The templates use html/template, which escapes every {{.X}} for where it lands (element text,
+// attribute value, URL), so post text and the search query cannot inject markup. All four are
+// parsed once at start-up; template.Must turns a template syntax error into a panic then, rather
+// than an error on the first request.
 
 package main
 
@@ -19,7 +27,8 @@ import (
 )
 
 // render writes t, filled from data, as an HTML answer with the status code. An error while it runs
-// can only be logged: the status line has gone out by then.
+// can only be logged: the status line has gone out by then. A page cut short by such an error
+// reaches the browser as it stands.
 func render(w http.ResponseWriter, code int, t *template.Template, data any) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(code)
@@ -30,7 +39,9 @@ func render(w http.ResponseWriter, code int, t *template.Template, data any) {
 
 // layout holds the two blocks every page wraps itself in: "top" (the head with the inline CSS, and the
 // header with the search box) and "bottom" (the footer). The inline <style> is why secure's
-// Content-Security-Policy allows 'unsafe-inline' styles.
+// Content-Security-Policy allows 'unsafe-inline' styles. The CSS follows the system's light or
+// dark theme through prefers-color-scheme, and the "px" class keeps the pixel-art icon sharp when
+// scaled. "top" reads .Q (the search box value) and "bottom" reads .Name, .Version and .Source.
 const layout = `{{define "top"}}<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Generic Company Inc. Journal</title>
 <link rel="icon" href="/favicon.ico">
@@ -53,6 +64,10 @@ footer{color:#667085;font-size:12px}
 // The pages, each parsed on top of layout. routes fills them through page(), which adds Source,
 // Version, Name and Public to each page's own keys: Posts, Q and Count (index); Post, Author, Blocks
 // and Related (post); Hint (missing); DB, Credit, Publisher, Counts, Saved and Error (about).
+//
+// Each page is built as New(name), Parse(layout) to define "top" and "bottom", then Parse(page) for
+// the page body, which calls those two blocks around its own markup. A key the handler does not
+// set is missing from the map, so a test such as {{if .Error}} stays false.
 var (
 	indexPage = template.Must(template.Must(template.New("index").Parse(layout)).Parse(`{{template "top" .}}
 <p class="meta">{{.Count}}{{if .Q}} matching "{{.Q}}"{{end}}</p>
@@ -77,4 +92,4 @@ var (
 {{template "bottom" .}}`))
 )
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=f3b71dd66d2a75b2ac3df8167a48ec3dbaeb39e3a8d1c72a508e1e16fe78c639 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=ab3bf116318e08dee3d831ea6f3c57f8f161a428275de27a3436c3e58cd9aac9 ====

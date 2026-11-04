@@ -11,6 +11,11 @@
 // admin views. Lengths are counted in runes (code points), not bytes and
 // not display columns: a wide CJK character still counts as one, and an
 // emoji built from several code points counts as several.
+//
+// Every function is pure: no state, no I/O, safe from any goroutine. In
+// the CMS, store uses Truncate for post excerpts and the index page uses
+// Plural for its post count; the rest are general helpers kept with their
+// tests.
 package textfmt
 
 import (
@@ -30,10 +35,12 @@ func Truncate(s string, n int) string {
 	if utf8.RuneCountInString(s) <= n {
 		return s
 	}
+	// n-1 runes plus the ellipsis is exactly n runes
 	return string([]rune(s)[:n-1]) + "…"
 }
 
-// Plural returns one when n is 1 and many otherwise (including 0).
+// Plural returns one when n is 1 and many otherwise (including 0 and
+// negatives). It suits English-style plurals only.
 func Plural(n int, one, many string) string {
 	if n == 1 {
 		return one
@@ -49,6 +56,8 @@ func ShortDuration(d time.Duration) string {
 	sign := ""
 	if d < 0 {
 		sign = "-"
+		// the most negative int64 has no positive twin (-MinInt64
+		// overflows back to itself), so it is clamped one nanosecond short
 		if d == math.MinInt64 {
 			d = math.MaxInt64
 		} else {
@@ -58,6 +67,7 @@ func ShortDuration(d time.Duration) string {
 	if d < time.Second {
 		return "0s"
 	}
+	// integer division truncates, which is what keeps "59.9s" at "59s"
 	switch {
 	case d >= 24*time.Hour:
 		h := int64(d / time.Hour)
@@ -88,18 +98,24 @@ func OneLine(s string) string {
 //   - No line is indented; prefix the lines yourself if you need to.
 //   - width <= 0 means no limit: the words come back as one line.
 //   - Empty or all-space input returns nil.
+//
+// It is greedy: each word goes on the current line if it fits, otherwise
+// it starts the next one.
 func Wrap(s string, width int) []string {
 	var lines []string
 	var cur strings.Builder
-	curLen := 0
+	curLen := 0 // runes in cur; 0 means the line is empty
 	for _, w := range strings.Fields(s) {
 		wl := utf8.RuneCountInString(w)
 		switch {
 		case curLen == 0:
+			// first word of a line: no space before it, and it goes here
+			// even when it is wider than width
 		case width <= 0 || curLen+1+wl <= width:
 			cur.WriteByte(' ')
 			curLen++
 		default:
+			// the word does not fit: close this line and start the next
 			lines = append(lines, cur.String())
 			cur.Reset()
 			curLen = 0
@@ -123,4 +139,4 @@ func PadRight(s string, n int) string {
 	return s
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=263ac284e5e63e82b2ad80ed48f32f7f287995417404be8fef6894b9d159fbde ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=1d20e28ac61b5fab49cee2f99f459bd280e2e2cf8eae849df988e918c39afb7e ====

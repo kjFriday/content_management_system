@@ -8,6 +8,10 @@
 // ========================================================================
 
 // Tests for install.go (Install, Uninstall) and the fixtures every test file here shares.
+//
+// Every test installs into a sandbox root under t.TempDir and, except TestRealShortcutInSandbox,
+// records the PowerShell scripts instead of running them, so nothing on the machine changes.
+// Fixtures: recorder, setup, day and noEnv.
 
 package install
 
@@ -20,10 +24,14 @@ import (
 	"time"
 )
 
+// recorder stands in for PowerShell: it keeps every script it is given and runs none.
 type recorder struct{ scripts []string }
 
+// run is the Runner: it records s and succeeds.
 func (r *recorder) run(s string) error { r.scripts = append(r.scripts, s); return nil }
 
+// setup writes a fake exe into a temp build folder and returns a test Program for it, plus the
+// sandbox root (not yet created) to install under.
 func setup(t *testing.T) (Program, string) {
 	t.Helper()
 	dir := t.TempDir()
@@ -34,10 +42,15 @@ func setup(t *testing.T) (Program, string) {
 		Exe: exe, ExeName: "generic-company-test.exe", Icon: []byte{0, 0, 1, 0}}, filepath.Join(dir, "sandbox")
 }
 
+// day is the fixed install date, so InstallDate reads "20261017" in every run.
 var day = time.Date(2026, 10, 17, 0, 0, 0, 0, time.UTC)
 
+// noEnv is an empty environment. With a sandbox root no variable is read anyway; without one,
+// Locations falls back to the user's home folder.
 func noEnv(string) string { return "" }
 
+// TestRoundTrip installs twice (a reinstall must work), then uninstalls: the folder and registry
+// key go, the database beside the sandbox stays, and three scripts ran.
 func TestRoundTrip(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, true, 1, day)
@@ -79,6 +92,8 @@ func TestRoundTrip(t *testing.T) {
 	}
 }
 
+// TestRunningFromInstallDirDeletesLater uninstalls as the installed exe: only that exe is left,
+// and the folder comes back as later.
 func TestRunningFromInstallDirDeletesLater(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, false, 1, day)
@@ -95,6 +110,8 @@ func TestRunningFromInstallDirDeletesLater(t *testing.T) {
 	}
 }
 
+// TestGuardRefusesForeignFolder pins both guards: no uninstall without a marker, no install over
+// another app id's marker, and the foreign file survives both.
 func TestGuardRefusesForeignFolder(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, false, 1, day)
@@ -112,6 +129,8 @@ func TestGuardRefusesForeignFolder(t *testing.T) {
 	}
 }
 
+// TestRealShortcutInSandbox runs the real PowerShell (skipped with -short): the .lnk appears, and
+// after uninstall the emptied Start-menu folder is gone too. The sandbox keeps the registry out.
 func TestRealShortcutInSandbox(t *testing.T) {
 	if testing.Short() {
 		t.Skip("runs PowerShell")
@@ -132,4 +151,4 @@ func TestRealShortcutInSandbox(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=28af27bf02b7ad7b3e3d827cf950775c68b7220e3db554c457d5607e096f928e ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=45fb340a288e6b23b4db9f5e3eef2c6a5f8feac953190a9f172bce6334ba94d4 ====

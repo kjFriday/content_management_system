@@ -8,6 +8,9 @@
 // ========================================================================
 
 // Tests for wizard.go: handing a Wizard Maker install to its own uninstall.exe.
+//
+// The uninstaller is never really run: each test passes a fake Exec or Reader, except
+// TestRunAndWaitReturnsTheExitCode, which runs cmd.exe.
 
 package install
 
@@ -34,6 +37,9 @@ func wizardInstall(t *testing.T, p Plan, appID string) {
 	os.WriteFile(filepath.Join(p.InstallDir, "notes.txt"), []byte("changed by the user"), 0o644)
 }
 
+// TestWizardInstallIsTheUninstallersToRemove pins when Wizard names an uninstaller: not for no
+// install, not for the program's own install, not for another app id, only for a wizard-made
+// install of this program.
 func TestWizardInstallIsTheUninstallersToRemove(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, false, 1, day)
@@ -54,6 +60,8 @@ func TestWizardInstallIsTheUninstallersToRemove(t *testing.T) {
 	}
 }
 
+// TestUninstallArgs pins no flags by default, and the order -quiet, -purge, -root with an
+// absolute root.
 func TestUninstallArgs(t *testing.T) {
 	if a := UninstallArgs(false, false, ""); len(a) != 0 {
 		t.Fatalf("%q", a)
@@ -64,6 +72,9 @@ func TestUninstallArgs(t *testing.T) {
 	}
 }
 
+// TestRunUninstallerKeepsChangedFiles pins that RunUninstaller only runs uninstall.exe with the
+// given flags and passes its code and words back (4, "already running"), touching no file
+// itself; a silent cancel gets "Uninstall cancelled.".
 func TestRunUninstallerKeepsChangedFiles(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, false, 1, day)
@@ -90,6 +101,9 @@ func TestRunUninstallerKeepsChangedFiles(t *testing.T) {
 	}
 }
 
+// TestRunUninstallerRefusesFromTheFolderItRemoves pins two refusals that never run anything: the
+// running exe lies in the folder (given in upper case, as Windows paths ignore case), and the
+// folder holds no wizard-made install.
 func TestRunUninstallerRefusesFromTheFolderItRemoves(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, false, 1, day)
@@ -112,6 +126,9 @@ func entry(t *testing.T, p Plan, dir string) {
 	}
 }
 
+// TestLocatedFindsAWizardInstallElsewhere walks a sandbox through no entry, a stale entry and a
+// wizard install in another folder, which Located follows and RunUninstaller then runs. The
+// Reader fails the test if called: a sandbox must use registry.json.
 func TestLocatedFindsAWizardInstallElsewhere(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, false, 1, day)
@@ -140,6 +157,8 @@ func TestLocatedFindsAWizardInstallElsewhere(t *testing.T) {
 	}
 }
 
+// TestLocatedNeverClearsAnInstallElsewhere pins the refusal for a folder elsewhere that holds
+// another app id's install or no marker at all, and that the entry is left in place.
 func TestLocatedNeverClearsAnInstallElsewhere(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, root, false, 1, day)
@@ -161,6 +180,8 @@ func TestLocatedNeverClearsAnInstallElsewhere(t *testing.T) {
 	}
 }
 
+// TestLocatedReadsTheRealRegistry pins, with a fake Reader, the script used outside a sandbox,
+// that a read error is passed on, and that a relative InstallLocation is ignored.
 func TestLocatedReadsTheRealRegistry(t *testing.T) {
 	prog, root := setup(t)
 	p := MakePlan(prog, noEnv, "", false, 1, day)
@@ -183,6 +204,8 @@ func TestLocatedReadsTheRealRegistry(t *testing.T) {
 	}
 }
 
+// TestRunAndWaitReturnsTheExitCode pins that exit code 4 and the output come back without an
+// error, and that a missing exe is an error.
 func TestRunAndWaitReturnsTheExitCode(t *testing.T) {
 	code, said, err := RunAndWait("cmd.exe", []string{"/d", "/c", "echo kept & exit 4"})
 	if err != nil || code != 4 || said != "kept" {
@@ -193,4 +216,4 @@ func TestRunAndWaitReturnsTheExitCode(t *testing.T) {
 	}
 }
 
-// ==== stamp v1 | author=kjFriday | hmac-sha256=5706ebb637925493e77b38e74691be9f028b941109342692e44b2c63772b2f46 ====
+// ==== stamp v1 | author=kjFriday | hmac-sha256=c75257bee28162c5d4f9cf05c3591363b8af99c359e7eb6bb5d64909b2129af2 ====
